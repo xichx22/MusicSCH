@@ -97,7 +97,29 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
 
     for (const { track, topic } of plan) {
       const target = topic ?? fallback
-      if (!target) continue
+      if (!target) {
+        /*
+         * 주제를 못 정했다고 버리지 않는다. 캐릭터만 적어서 남겨두고,
+         * 나중에 이 곡들을 보고 주제 카드를 만든다. 실제 있는 노래에서
+         * 카드를 뽑는 편이, 카드를 먼저 정해두고 노래를 끼워 맞추는
+         * 것보다 낫다.
+         */
+        added.push({
+          id: newId(),
+          title: track.name,
+          sourceId: 'spotify',
+          ref: track.ref,
+          tags: [character.word],
+          needsTopic: character.id,
+          durationSec: track.durationSec,
+          image: track.image,
+          fromAlbum: albumId ?? undefined,
+          playCount: 0,
+          approved: true,
+          addedAt: Date.now(),
+        })
+        continue
+      }
       const key = comboKey(character.id, target.id)
       keys.add(key)
       added.push({
@@ -118,22 +140,25 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
     }
 
     if (added.length === 0) {
-      setNote('넣을 곡이 없어. 주제를 못 정한 곡뿐이면 아래에서 기본 주제를 골라줘.')
+      setNote('넣을 곡이 없어.')
       return
     }
 
     setDb((d) => {
-      const known = new Set(d.songs.map((s) => `${s.combo}|${s.ref}`))
-      const fresh = added.filter((s) => !known.has(`${s.combo}|${s.ref}`))
+      const known = new Set(d.songs.map((s) => `${s.combo ?? s.needsTopic}|${s.ref}`))
+      const fresh = added.filter((s) => !known.has(`${s.combo ?? s.needsTopic}|${s.ref}`))
       const checks = { ...d.checks }
       for (const k of keys) checks[k] = { at: Date.now(), count: 1 }
       return { ...d, songs: [...d.songs, ...fresh], checks }
     })
 
-    const skipped = plan.length - added.length
+    const pending = added.filter((s) => s.needsTopic).length
     setPlan(null)
     setLink('')
-    setNote(`${added.length}곡 넣었어.` + (skipped ? ` 주제를 못 정한 ${skipped}곡은 건너뛰었어.` : ''))
+    setNote(
+      `${added.length}곡 넣었어.` +
+        (pending ? ` 그중 ${pending}곡은 주제를 못 정해서 아래 [목록에서 카드 만들기] 에 모아뒀어.` : ''),
+    )
   }
 
   return (
@@ -202,7 +227,7 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
           <label>
             주제를 못 정한 곡은 어디에 넣을까
             <select value={fallbackId} onChange={(e) => setFallbackId(e.target.value)}>
-              <option value="">건너뛰기</option>
+              <option value="">나중에 정하기 (목록에 모아둠)</option>
               {topics
                 .filter((t) => !t.forCharacters || !character || t.forCharacters.includes(character.id))
                 .map((t) => (

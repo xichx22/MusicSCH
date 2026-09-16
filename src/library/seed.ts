@@ -118,6 +118,7 @@ export const DEFAULT_SETTINGS: Settings = {
   maxVolume: 0.7,
   parentPin: '1234',
   searchSourceId: 'spotify',
+  mode: 'list',
   searchEnabled: true,
   onlyWithSongs: true,
 }

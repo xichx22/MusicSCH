@@ -632,6 +632,19 @@ body {
 .plan-topic { flex: 0 0 auto; color: var(--ink-soft); }
 .plan li.bad .plan-topic { color: #A8562F; }
 
+/* 주제를 못 정한 곡 */
+.pending { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
+
+.pending li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pending select { max-width: 150px; margin-top: 0; }
+
 /* 조합 점검 결과 */
 .combo { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; }
 

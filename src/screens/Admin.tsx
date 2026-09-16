@@ -9,6 +9,7 @@ import { clear as clearDiag, entries as diagEntries } from '../library/diag'
 import { ComboCheck } from './ComboCheck'
 import { CardArt } from './CardArt'
 import { AddByLink } from './AddByLink'
+import { BuildCards } from './BuildCards'
 
 interface Props {
   db: DB
@@ -117,7 +118,24 @@ export function Admin({ db, setDb, onClose }: Props) {
           </select>
         </label>
         <p className="hint">{getSource(db.settings.searchSourceId).readyHint()}</p>
-        <label className="row">
+        <label>
+          앱을 어떻게 쓸까
+          <select
+            value={db.settings.mode}
+            onChange={(e) =>
+              setDb((d) => ({ ...d, settings: { ...d.settings, mode: e.target.value as 'search' | 'list' } }))
+            }
+          >
+            <option value="list">미리 넣어둔 노래만 (검색 안 함)</option>
+            <option value="search">누를 때 스포티파이에서 찾기</option>
+          </select>
+        </label>
+        <p className="hint">
+          {db.settings.mode === 'list'
+            ? '넣어둔 노래만 쓴다. 카드도 그 목록에서 만든다. 검색을 안 하니 할당량과 무관하고, 지한이가 누르면 반드시 소리가 난다.'
+            : '카드를 누르면 스포티파이에서 찾아본다. 새 노래를 만날 수 있지만 할당량을 쓰고, 엉뚱한 게 나올 수도 있다.'}
+        </p>
+        <label className="row" hidden={db.settings.mode === 'list'}>
           <input
             type="checkbox"
             checked={db.settings.onlyWithSongs}
@@ -146,6 +164,8 @@ export function Admin({ db, setDb, onClose }: Props) {
       {db.settings.searchSourceId === 'spotify' && <SpotifyPanel />}
 
       <AddByLink db={db} setDb={setDb} />
+
+      <BuildCards db={db} setDb={setDb} />
 
       <CardArt db={db} setDb={setDb} />
 

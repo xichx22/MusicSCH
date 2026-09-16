@@ -9,7 +9,7 @@ const KEY = 'musicsch.v1'
  * 덮어쓰면 안 되기 때문이다. 그래서 꼭 따라가야 하는 변경만 여기에
  * 적고, 아빠가 손대지 않은 값일 때만 바꾼다.
  */
-const SEED_VERSION = 4
+const SEED_VERSION = 5
 
 interface DB {
   cards: Card[]
@@ -42,6 +42,11 @@ function migrate(db: DB): DB {
     })
     // 검색어가 바뀌었으니 예전 점검 결과는 못 믿는다.
     checks = Object.fromEntries(Object.entries(checks).filter(([k]) => !k.endsWith(':t-shark')))
+  }
+
+  if (from < 5) {
+    // 지금까지 쓰던 '노래 있는 카드만' 설정을 그대로 모드로 옮긴다.
+    settings = { ...settings, mode: settings.onlyWithSongs ? 'list' : 'search' }
   }
 
   if (from < 4) {
@@ -143,6 +148,20 @@ export function comboKey(characterId: string, topicId: string): string {
  * 조합만 감춘다. 눌렀는데 아무것도 안 나오는 경험을 줄이면서도,
  * 내가 미리 지레짐작해서 빼버리지는 않으려는 것이다.
  */
+/**
+ * 첫 화면에 보여줄 캐릭터.
+ * 미리지정 모드에서는 노래가 한 곡도 없는 캐릭터를 감춘다.
+ * 눌러봐야 빈 화면이면 없느니만 못하다.
+ */
+export function charactersFor(db: DB): Card[] {
+  const all = db.cards.filter((c) => c.kind === 'character' && !c.hidden)
+  if (db.settings.mode === 'search') return all
+  const withSongs = new Set(
+    db.songs.map((s) => s.combo?.split(':')[0] ?? s.needsTopic).filter(Boolean) as string[],
+  )
+  return all.filter((c) => withSongs.has(c.id))
+}
+
 export function topicsFor(db: DB, characterId: string): Card[] {
   return db.cards.filter((c) => {
     if (c.kind !== 'topic' || c.hidden) return false
@@ -153,8 +172,8 @@ export function topicsFor(db: DB, characterId: string): Card[] {
     const hasSong = db.songs.some((s) => s.combo === key)
     if (hasSong) return true
 
-    // 노래가 없는 카드를 감추기로 했으면 여기서 끝.
-    if (db.settings.onlyWithSongs) return false
+    // 미리지정 모드에서는 노래가 없는 카드를 아예 안 보여준다.
+    if (db.settings.mode === 'list' || db.settings.onlyWithSongs) return false
 
     const check = db.checks[key]
     return !check || check.count > 0

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Card, Song } from './types'
-import { comboKey, findApproved, load, newId, save, topicsFor, type DB } from './library/store'
+import { charactersFor, comboKey, findApproved, load, newId, save, topicsFor, type DB } from './library/store'
 import { log as logDiag } from './library/diag'
 import { getSource } from './sources'
 import { SpotifyRateLimitError } from './sources/spotify'
@@ -65,7 +65,7 @@ export default function App() {
     }
   }, [limitReached, now, stop])
 
-  const characters = useMemo(() => db.cards.filter((c) => c.kind === 'character' && !c.hidden), [db.cards])
+  const characters = useMemo(() => charactersFor(db), [db])
 
   const goHome = () => {
     stop()
@@ -116,6 +116,9 @@ export default function App() {
       if (choices.length === 1) return start(choices[0])
       return setStep({ name: 'choose', character, topic, choices })
     }
+
+    // 미리지정 모드는 검색을 하지 않는다. 넣어둔 노래만 쓴다.
+    if (db.settings.mode === 'list') return setStep({ name: 'empty', character })
 
     // B: 새 노래 찾아보기.
     // 고른 소스가 아직 준비가 안 됐으면(로그인 전 등) 내 음원에서라도 찾아본다.
