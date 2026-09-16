@@ -129,6 +129,11 @@ npm run build    # 배포용 빌드 -> dist/
 | `/me/player` | 곡 끝났는지 확인 | 지원 |
 
 없어진 것은 `Get Several ...` 류와 사용자 프로필 계열인데 이 앱은 하나도 안 쓴다.
+응답에서 빠진 필드(`popularity`, `available_markets`, `external_ids` 등)도 안 쓴다.
+쓰는 필드(`uri`, `name`, `duration_ms`, `explicit`, `artists[].name`, `album.images`)는 그대로 있다.
+
+**단, 검색 `limit` 최대값이 50 -> 10 으로 줄었다.** 10 을 넘기면
+`400 Invalid limit` 이 난다. 이것 때문에 처음에 검색이 통째로 실패했었다.
 
 ### 개발자 모드 제한
 

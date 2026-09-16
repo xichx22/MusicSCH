@@ -29,6 +29,9 @@ interface SpotifyTrack {
   album: { images: { url: string; width: number }[] }
 }
 
+/** 스포티파이 검색이 허용하는 최대값 (2026년 2월부터 10). */
+const SEARCH_LIMIT = 10
+
 let volume = 0.7
 
 /** 재생할 기기를 정한다. sdk 모드면 이 브라우저, device 모드면 골라둔 기기. */
@@ -65,7 +68,9 @@ export const spotifySource: MusicSource = {
       q: query,
       type: 'track',
       market: 'KR',
-      limit: '12',
+      // 2026년 2월부터 검색 limit 최대값이 50 -> 10 으로 줄었다.
+      // 넘기면 400 Invalid limit 이 난다. 어차피 아이에게는 4개까지만 보여준다.
+      limit: String(SEARCH_LIMIT),
     })
     const res = await api<{ tracks: { items: SpotifyTrack[] } }>(`/search?${params}`)
     const items = res?.tracks?.items ?? []
