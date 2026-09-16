@@ -1,0 +1,10 @@
+{
+  "name": "지한이 노래",
+  "short_name": "노래",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#12131a",
+  "theme_color": "#12131a",
+  "icons": []
+}

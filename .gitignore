@@ -1,0 +1,10 @@
+node_modules
+dist
+.DS_Store
+*.local
+
+# 지한이 음원 파일은 저작권이 있으니 깃에 올리지 않는다.
+public/songs/*
+!public/songs/manifest.json
+!public/songs/README.md
+tsconfig.tsbuildinfo
