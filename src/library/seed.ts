@@ -67,7 +67,10 @@ export const SEED_CARDS: Card[] = [
   /* ---------- 2차: 배우는 노래 ---------- */
   { id: 't-dino', kind: 'topic', word: '공룡', emoji: '🦕', color: '#DCEBCF', forCharacters: LEARN },
   { id: 't-animal', kind: 'topic', word: '동물', emoji: '🐘', color: '#E8E0D6', forCharacters: LEARN },
-  { id: 't-shark', kind: 'topic', word: '상어', emoji: '🦈', color: '#D5E5F5', forCharacters: LEARN },
+  // 아기상어는 핑크퐁이 만든 노래다. 스포티파이에 '아기상어' 라는 아티스트는
+  // 없고 Pinkfong 밑에 들어 있다. 그래서 캐릭터가 아니라 주제로 둔다.
+  // 카드에는 '상어' 라고 쓰고 검색은 실제 제목인 '아기상어' 로 한다.
+  { id: 't-shark', kind: 'topic', word: '아기상어', label: '상어', emoji: '🦈', color: '#D5E5F5', forCharacters: LEARN },
   { id: 't-number', kind: 'topic', word: '숫자', emoji: '🔢', color: '#DCDDF6', forCharacters: LEARN },
   { id: 't-color', kind: 'topic', word: '색깔', emoji: '🎨', color: '#F8DAEB', forCharacters: LEARN },
   { id: 't-fruit', kind: 'topic', word: '과일', emoji: '🍎', color: '#FBD9D5', forCharacters: LEARN },
