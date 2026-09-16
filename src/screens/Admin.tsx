@@ -3,7 +3,7 @@ import type { DB } from '../library/store'
 import { newId } from '../library/store'
 import type { Song } from '../types'
 import { SOURCES, getSource } from '../sources'
-import { loadManifest } from '../sources/local'
+import { loadManifest, localRef } from '../sources/local'
 import { SpotifyPanel } from '../sources/spotify/Panel'
 
 interface Props {
@@ -24,12 +24,12 @@ export function Admin({ db, setDb, onClose }: Props) {
     setDb((d) => {
       const known = new Set(d.songs.filter((s) => s.sourceId === 'local').map((s) => s.ref))
       const fresh: Song[] = entries
-        .filter((e) => !known.has(`/songs/${e.file}`))
+        .filter((e) => !known.has(localRef(e.file)))
         .map((e) => ({
           id: newId(),
           title: e.title,
           sourceId: 'local',
-          ref: `/songs/${e.file}`,
+          ref: localRef(e.file),
           tags: e.tags,
           durationSec: e.durationSec,
           emoji: e.emoji,

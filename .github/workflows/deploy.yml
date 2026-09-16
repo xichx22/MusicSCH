@@ -1,0 +1,58 @@
+name: GitHub Pages 배포
+
+on:
+  push:
+    branches: [claude/image-based-youtube-music-app-lgmbzo]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포가 겹치지 않게 한 번에 하나씩만 돌린다.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: 빌드
+        env:
+          # GitHub Pages 는 https://<계정>.github.io/<레포>/ 하위 경로로 서비스된다.
+          BASE_PATH: /${{ github.event.repository.name }}/
+          # Client ID 는 브라우저에 어차피 드러나는 값이라 비밀이 아니다.
+          # 레포 Settings > Secrets and variables > Actions > Variables 에 넣으면
+          # 아빠 화면에서 매번 입력하지 않아도 된다. 없어도 앱은 돌아간다.
+          VITE_SPOTIFY_CLIENT_ID: ${{ vars.SPOTIFY_CLIENT_ID }}
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+        with:
+          # Pages 가 아직 안 켜져 있으면 알아서 켠다.
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

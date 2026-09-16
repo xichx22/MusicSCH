@@ -14,7 +14,18 @@ export interface LocalManifestEntry {
   durationSec?: number
 }
 
-const MANIFEST_URL = '/songs/manifest.json'
+/**
+ * 하위 경로에 배포될 수 있어서(GitHub Pages 등) 주소를 직접 쓰지 않고
+ * 빌드할 때 정해지는 기준 경로를 붙여서 만든다.
+ */
+function url(path: string): string {
+  return import.meta.env.BASE_URL + path.replace(/^\//, '')
+}
+
+/** 저장해둘 때 쓰는 값. 기준 경로가 바뀌어도 깨지지 않게 상대 경로로 둔다. */
+export function localRef(file: string): string {
+  return `songs/${file}`
+}
 
 let audio: HTMLAudioElement | null = null
 let manifestCache: LocalManifestEntry[] | null = null
@@ -30,7 +41,7 @@ function el(): HTMLAudioElement {
 export async function loadManifest(force = false): Promise<LocalManifestEntry[]> {
   if (manifestCache && !force) return manifestCache
   try {
-    const res = await fetch(MANIFEST_URL, { cache: 'no-cache' })
+    const res = await fetch(url('songs/manifest.json'), { cache: 'no-cache' })
     if (!res.ok) throw new Error(String(res.status))
     const json = (await res.json()) as LocalManifestEntry[]
     manifestCache = Array.isArray(json) ? json : []
@@ -68,7 +79,7 @@ export const localSource: MusicSource = {
       // 낱말이 많이 맞을수록 위로
       .sort((a, b) => b.hits - a.hits)
       .map(({ entry }) => ({
-        ref: `/songs/${entry.file}`,
+        ref: localRef(entry.file),
         title: entry.title,
         durationSec: entry.durationSec,
       }))
@@ -76,11 +87,12 @@ export const localSource: MusicSource = {
 
   async play(ref, onEnded) {
     const a = el()
+    const src = url(ref)
     a.onended = onEnded
-    if (a.src.endsWith(ref)) {
+    if (a.src.endsWith(src)) {
       a.currentTime = 0
     } else {
-      a.src = ref
+      a.src = src
     }
     await a.play()
   },

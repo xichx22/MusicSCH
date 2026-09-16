@@ -100,10 +100,11 @@ npm run build    # 배포용 빌드 -> dist/
 |---|---|---|
 | PC 에서 개발 | `http://127.0.0.1:5173/` | 된다 |
 | 태블릿에서 내 PC 접속 | `http://192.168.0.5:5173/` | **안 된다** |
-| 배포 후 | `https://무언가.vercel.app/` | 된다 |
+| 배포된 주소 | `https://xichx22.github.io/MusicSCH/` | 된다 |
 
-즉 **태블릿에서 쓰려면 https 로 배포해야 한다.** Vercel / Netlify / Cloudflare Pages
-아무 데나 무료로 올리면 https 주소가 나온다. 그 주소를 Redirect URI 에 등록하면 끝.
+즉 **태블릿에서 쓰려면 https 로 배포해야 한다.** 그래서 GitHub Pages 에 올려뒀다.
+스포티파이 대시보드의 Redirect URI 에 `https://xichx22.github.io/MusicSCH/` 를
+**끝 슬래시까지 그대로** 등록하면 된다.
 
 ### 개발자 모드 제한
 
@@ -124,6 +125,26 @@ npm run build    # 배포용 빌드 -> dist/
 
 `src/sources/appleMusic.ts` 는 아직 껍데기다. 붙이는 순서는 파일 안 주석에 적어뒀다.
 
+## 배포
+
+`claude/image-based-youtube-music-app-lgmbzo` 에 푸시하면 GitHub Actions 가
+자동으로 GitHub Pages 에 올린다 (`.github/workflows/deploy.yml`).
+
+**주소: https://xichx22.github.io/MusicSCH/**
+
+Pages 는 `https://<계정>.github.io/<레포>/` 처럼 하위 경로라서 빌드할 때
+`BASE_PATH=/MusicSCH/` 를 넣는다. 로컬에서 똑같이 확인하려면:
+
+```bash
+BASE_PATH=/MusicSCH/ npm run build
+BASE_PATH=/MusicSCH/ npm run preview   # http://localhost:4173/MusicSCH/
+```
+
+Client ID 를 매번 입력하기 싫으면 레포
+Settings → Secrets and variables → Actions → **Variables** 에
+`SPOTIFY_CLIENT_ID` 를 넣으면 빌드에 박혀서 나온다. (Client ID 는 브라우저에
+어차피 드러나는 값이라 비밀이 아니다. **Client Secret 은 이 앱에서 아예 안 쓴다.**)
+
 ## 태블릿 세팅 (권장)
 
 - **화면 고정 / 앱 고정(Screen Pinning)** 켜기 — 홈 버튼으로 못 빠져나간다
@@ -133,7 +154,7 @@ npm run build    # 배포용 빌드 -> dist/
 ## 앞으로 할 것
 
 - [x] 음원 소스 정하기 → 내 mp3(A) + 스포티파이(B)
-- [ ] https 로 배포해서 태블릿에서 로그인되게 하기
+- [x] https 로 배포 (GitHub Pages)
 - [ ] 이모지 대신 진짜 그림 넣기 (`Card.image`)
 - [ ] 오프라인 캐시(서비스 워커)
 - [ ] 음성으로 찾기 — 지한이가 "뽀뽀 소망차" 라고 해도 알아듣게 보정하기

@@ -66,7 +66,8 @@ export function setClientId(id: string): void {
  * 스포티파이는 https 만 받는다. 예외는 http://127.0.0.1:포트 뿐이고 localhost 는 안 된다.
  */
 export function redirectUri(): string {
-  return `${window.location.origin}/`
+  // 하위 경로에 배포되면 그 경로까지 포함해야 한다. BASE_URL 은 항상 / 로 끝난다.
+  return window.location.origin + import.meta.env.BASE_URL
 }
 
 function randomString(len: number): string {
