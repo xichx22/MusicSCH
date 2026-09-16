@@ -40,7 +40,7 @@ interface SpotifyTrack {
   duration_ms: number
   explicit: boolean
   artists: { name: string }[]
-  album: { images: { url: string; width: number }[] }
+  album: { name: string; images: SpotifyImage[] }
 }
 
 /** 스포티파이 검색이 허용하는 최대값 (2026년 2월부터 10). */
@@ -175,6 +175,39 @@ async function recoverDevice(deviceId: string): Promise<string> {
   return chosen.id
 }
 
+export interface TopicArt {
+  image: string
+  /** 어느 앨범에서 가져왔는지. 아빠가 확인하라고 준다. */
+  from: string
+}
+
+/**
+ * 주제 카드(소방차, 양치, 생일 ...)에 쓸 그림.
+ *
+ * 그냥 검색해서 나온 첫 곡의 앨범 표지를 쓰면 안 된다. 소방차 노래와 자동차
+ * 노래가 같은 '뽀로로 자동차 동요' 앨범에 들어 있으면 두 카드가 똑같아져서
+ * 아이가 구별을 못 한다.
+ *
+ * 그래서 앨범 이름에 그 낱말이 들어 있을 때만 쓴다. 그 앨범이 그 주제에
+ * 대한 앨범이라는 뜻이기 때문이다. 아니면 그림 없이 이모지를 그대로 둔다.
+ */
+export async function findTopicArt(query: string, topicWord: string): Promise<TopicArt | null> {
+  const params = new URLSearchParams({
+    q: query,
+    type: 'track',
+    market: 'KR',
+    limit: String(SEARCH_LIMIT),
+  })
+  const res = await api<{ tracks: { items: SpotifyTrack[] } }>(`/search?${params}`)
+  const items = res?.tracks?.items ?? []
+
+  const match = items.find((t) => t.album.name.includes(topicWord))
+  if (!match) return null
+
+  const image = pickImage(match.album.images)
+  return image ? { image, from: match.album.name } : null
+}
+
 export const spotifySource: MusicSource = {
   id: 'spotify',
   label: '스포티파이',
@@ -218,7 +251,7 @@ export const spotifySource: MusicSource = {
         title: `${t.name} - ${t.artists.map((a) => a.name).join(', ')}`,
         durationSec: Math.round(t.duration_ms / 1000),
         // 가장 작은 앨범 이미지면 충분하다.
-        thumbnail: t.album.images.at(-1)?.url,
+        thumbnail: pickImage(t.album.images),
       }))
   },
 
