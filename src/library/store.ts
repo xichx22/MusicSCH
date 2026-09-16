@@ -9,7 +9,7 @@ const KEY = 'musicsch.v1'
  * 덮어쓰면 안 되기 때문이다. 그래서 꼭 따라가야 하는 변경만 여기에
  * 적고, 아빠가 손대지 않은 값일 때만 바꾼다.
  */
-const SEED_VERSION = 3
+const SEED_VERSION = 4
 
 interface DB {
   cards: Card[]
@@ -26,7 +26,7 @@ function migrate(db: DB): DB {
   const from = db.seedVersion ?? 1
   if (from >= SEED_VERSION) return db
 
-  let { cards, checks } = db
+  let { cards, checks, settings } = db
 
   if (from < 2) {
     /*
@@ -44,6 +44,14 @@ function migrate(db: DB): DB {
     checks = Object.fromEntries(Object.entries(checks).filter(([k]) => !k.endsWith(':t-shark')))
   }
 
+  if (from < 4) {
+    /*
+     * 노래가 없는 카드는 감춘다. 할당량이 막혀 있으면 빈 카드를 눌러봐야
+     * 허탕이고, 아이는 그러면 금방 흥미를 잃는다. 아빠가 끌 수 있다.
+     */
+    settings = { ...settings, onlyWithSongs: true }
+  }
+
   if (from < 3) {
     /*
      * 검색이 낱말을 다 만족시키도록 바뀌었다. 예전 점검 결과는 느슨한
@@ -54,7 +62,7 @@ function migrate(db: DB): DB {
     checks = {}
   }
 
-  return { ...db, cards, checks, seedVersion: SEED_VERSION }
+  return { ...db, cards, checks, settings, seedVersion: SEED_VERSION }
 }
 
 function today(): string {
@@ -139,7 +147,16 @@ export function topicsFor(db: DB, characterId: string): Card[] {
   return db.cards.filter((c) => {
     if (c.kind !== 'topic' || c.hidden) return false
     if (c.forCharacters && !c.forCharacters.includes(characterId)) return false
-    const check = db.checks[comboKey(characterId, c.id)]
+
+    const key = comboKey(characterId, c.id)
+    // 이 조합으로 넣어둔 노래가 있으면 무조건 보여준다.
+    const hasSong = db.songs.some((s) => s.combo === key)
+    if (hasSong) return true
+
+    // 노래가 없는 카드를 감추기로 했으면 여기서 끝.
+    if (db.settings.onlyWithSongs) return false
+
+    const check = db.checks[key]
     return !check || check.count > 0
   })
 }

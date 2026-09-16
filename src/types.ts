@@ -86,6 +86,13 @@ export interface Settings {
   searchSourceId: string
   /** 검색을 아예 끄고 A목록만 쓰기 */
   searchEnabled: boolean
+  /**
+   * 노래가 들어 있는 카드만 지한이에게 보여주기.
+   *
+   * 검색 할당량이 막혀 있으면 빈 카드를 눌러봐야 '그 노래는 아직 없어요'
+   * 만 나온다. 누르는 족족 허탕이면 아이는 금방 흥미를 잃는다.
+   */
+  onlyWithSongs: boolean
 }
 
 export interface UsageToday {

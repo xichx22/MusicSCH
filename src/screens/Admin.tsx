@@ -120,6 +120,20 @@ export function Admin({ db, setDb, onClose }: Props) {
         <label className="row">
           <input
             type="checkbox"
+            checked={db.settings.onlyWithSongs}
+            onChange={(e) =>
+              setDb((d) => ({ ...d, settings: { ...d.settings, onlyWithSongs: e.target.checked } }))
+            }
+          />
+          노래가 있는 카드만 보여주기
+        </label>
+        <p className="hint">
+          켜두면 지한이는 눌러서 소리가 나는 카드만 보게 된다. 끄면 아직 노래가 없는 카드도
+          보이고, 누르면 그때 검색한다 (할당량이 막혀 있으면 허탕이다).
+        </p>
+        <label className="row">
+          <input
+            type="checkbox"
             checked={db.settings.searchEnabled}
             onChange={(e) =>
               setDb((d) => ({ ...d, settings: { ...d.settings, searchEnabled: e.target.checked } }))

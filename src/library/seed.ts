@@ -119,4 +119,5 @@ export const DEFAULT_SETTINGS: Settings = {
   parentPin: '1234',
   searchSourceId: 'spotify',
   searchEnabled: true,
+  onlyWithSongs: true,
 }
