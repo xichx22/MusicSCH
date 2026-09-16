@@ -124,6 +124,8 @@ export function ComboCheck({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
       <h2>조합 점검</h2>
       <p className="hint">
         카드 조합을 전부 스포티파이에 물어보고, 노래가 없는 조합은 지한이 화면에서 감춘다.
+        받은 결과는 제목·가수·앨범에 <strong>낱말이 전부 들어 있는 것만</strong> 남긴다.
+        스포티파이 검색은 '타요 견인차' 에 송대관 유행가를 주기도 한다.
         전체 {pairsOf(db).length}개 조합 · 확인한 것 {checked}개 (노래 있음 {withSongs}개).
         몇 분 걸리니 화면을 켜둔 채로 기다려줘.
       </p>

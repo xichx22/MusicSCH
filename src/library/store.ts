@@ -8,7 +8,7 @@ const KEY = 'musicsch.v1'
  * 덮어쓰면 안 되기 때문이다. 그래서 꼭 따라가야 하는 변경만 여기에
  * 적고, 아빠가 손대지 않은 값일 때만 바꾼다.
  */
-const SEED_VERSION = 2
+const SEED_VERSION = 3
 
 interface DB {
   cards: Card[]
@@ -41,6 +41,16 @@ function migrate(db: DB): DB {
     })
     // 검색어가 바뀌었으니 예전 점검 결과는 못 믿는다.
     checks = Object.fromEntries(Object.entries(checks).filter(([k]) => !k.endsWith(':t-shark')))
+  }
+
+  if (from < 3) {
+    /*
+     * 검색이 낱말을 다 만족시키도록 바뀌었다. 예전 점검 결과는 느슨한
+     * 검색으로 만든 것이라 '노래 있음' 이 실제로는 없을 수 있다.
+     * 그대로 두면 아이가 눌렀을 때 빈 화면을 만난다. 전부 비우고
+     * 다시 점검하게 한다.
+     */
+    checks = {}
   }
 
   return { ...db, cards, checks, seedVersion: SEED_VERSION }

@@ -51,6 +51,18 @@ const ART_MAX_WIDTH = 400
 
 let volume = 0.7
 
+/**
+ * 낱말이 제목·가수·앨범 어디엔가 들어 있는가.
+ *
+ * 한 글자짜리는 아무 데나 들어맞는다. '배' 가 '배드카' 에 걸리는 식이다.
+ * 그래서 한 글자는 앞뒤가 한글이 아닐 때만 인정한다.
+ */
+function mentions(hay: string, word: string): boolean {
+  if (word.length >= 2) return hay.includes(word)
+  const safe = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`(^|[^가-힣])${safe}([^가-힣]|$)`).test(hay)
+}
+
 /** 스포티파이는 큰 것부터 준다. 카드에 알맞은 크기를 고른다. */
 function pickImage(images: SpotifyImage[]): string | undefined {
   if (images.length === 0) return undefined
@@ -245,12 +257,46 @@ export const spotifySource: MusicSource = {
     const res = await api<{ tracks: { items: SpotifyTrack[] } }>(`/search?${params}`)
     const items = res?.tracks?.items ?? []
 
-    // 아이가 듣는 앱이라 성인 표시된 곡은 아예 뺀다.
-    const kept = items.filter((t) => !t.explicit)
+    /*
+     * 스포티파이 검색은 낱말을 다 만족시키지 않아도 결과를 준다.
+     * '타요 견인차' 를 물었더니 송대관 유행가와 MC몽이 나왔다.
+     * 그래서 받은 뒤에 우리가 다시 거른다. 제목이든 가수든 앨범이든
+     * 어디엔가 낱말이 전부 들어 있어야 한다.
+     *
+     * 많이 걸러져서 0개가 되는 건 괜찮다. 조합 점검이 그 카드를 감춰준다.
+     * 아이에게 엉뚱한 노래를 들려주는 것보다 없는 편이 낫다.
+     */
+    const words = query.split(/\s+/).filter(Boolean)
+    const seen = new Set<string>()
+    let offTopic = 0
+    let duplicate = 0
+
+    const kept = items.filter((t) => {
+      // 아이가 듣는 앱이라 성인 표시된 곡은 아예 뺀다.
+      if (t.explicit) return false
+
+      const hay = [t.name, t.album.name, ...t.artists.map((a) => a.name)].join(' ')
+      if (!words.every((w) => mentions(hay, w))) {
+        offTopic += 1
+        return false
+      }
+
+      // 같은 제목이 앨범만 달리해서 여러 번 온다. 아이에게는 같은 카드 두 장이다.
+      const key = t.name.trim().toLowerCase().replace(/\s+/g, '')
+      if (seen.has(key)) {
+        duplicate += 1
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+
     log(
       `스포티파이 검색 "${query}"`,
       kept.length > 0,
-      `받은 곡 ${items.length}개, 성인곡 제외 후 ${kept.length}개`,
+      `받은 곡 ${items.length}개 → 남은 곡 ${kept.length}개` +
+        (offTopic ? ` (낱말 안 맞음 ${offTopic})` : '') +
+        (duplicate ? ` (같은 제목 ${duplicate})` : ''),
     )
 
     return kept
