@@ -129,7 +129,20 @@ body {
   text-align: center;
 }
 
-.playing-art { font-size: min(40vmin, 340px); line-height: 1; }
+.playing-art {
+  font-size: min(40vmin, 340px);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.playing-art img {
+  width: min(50vmin, 420px);
+  height: min(50vmin, 420px);
+  object-fit: contain;
+  border-radius: 4vmin;
+}
 
 .playing-title {
   font-size: min(4vmin, 28px);
@@ -282,6 +295,13 @@ body {
 
 .admin button.danger { color: #ff8a8a; }
 .hint { color: var(--muted); font-size: 13px; margin: 4px 0; }
+.admin code {
+  background: #23262f;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+  word-break: break-all;
+}
 
 .songs { list-style: none; margin: 0; padding: 0; }
 

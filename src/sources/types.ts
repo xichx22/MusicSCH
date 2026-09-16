@@ -38,7 +38,4 @@ export interface MusicSource {
 
   /** 0 ~ 1 */
   setVolume(v: number): void
-
-  /** 지금까지 재생된 초. 사용 시간 제한 계산에 쓴다. */
-  currentTimeSec(): number
 }

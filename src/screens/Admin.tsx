@@ -4,6 +4,7 @@ import { newId } from '../library/store'
 import type { Song } from '../types'
 import { SOURCES, getSource } from '../sources'
 import { loadManifest } from '../sources/local'
+import { SpotifyPanel } from '../sources/spotify/Panel'
 
 interface Props {
   db: DB
@@ -123,6 +124,8 @@ export function Admin({ db, setDb, onClose }: Props) {
           검색 켜기 (끄면 아빠가 넣은 노래만 나옴)
         </label>
       </section>
+
+      {db.settings.searchSourceId === 'spotify' && <SpotifyPanel />}
 
       <section>
         <h2>음원 불러오기</h2>

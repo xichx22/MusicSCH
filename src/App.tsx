@@ -18,6 +18,7 @@ interface Choice {
   sourceId: string
   title: string
   emoji: string
+  image?: string
   /** 검색으로 갓 찾은 곡인가 (아직 아빠 확인 전) */
   songId?: string
 }
@@ -83,14 +84,17 @@ export default function App() {
         sourceId: s.sourceId,
         title: s.title,
         emoji: s.emoji ?? fallbackEmoji,
+        image: s.image,
         songId: s.id,
       }))
       if (choices.length === 1) return start(choices[0])
       return setStep({ name: 'choose', character, topic, choices })
     }
 
-    // B: 새 노래 찾아보기
-    const source = getSource(db.settings.searchSourceId)
+    // B: 새 노래 찾아보기.
+    // 고른 소스가 아직 준비가 안 됐으면(로그인 전 등) 내 음원에서라도 찾아본다.
+    let source = getSource(db.settings.searchSourceId)
+    if (!(await source.isReady())) source = getSource('local')
     if (!db.settings.searchEnabled || !source.canSearch || !(await source.isReady())) {
       return setStep({ name: 'empty', character })
     }
@@ -109,6 +113,7 @@ export default function App() {
         tags: words,
         durationSec: r.durationSec,
         emoji: fallbackEmoji,
+        image: r.thumbnail,
         playCount: 0,
         approved: false,
         addedAt: Date.now(),
@@ -122,6 +127,7 @@ export default function App() {
         sourceId: s.sourceId,
         title: s.title,
         emoji: s.emoji ?? fallbackEmoji,
+        image: s.image,
         songId: s.id,
       }))
       if (choices.length === 1) return start(choices[0])
@@ -146,6 +152,7 @@ export default function App() {
       ref: choice.ref,
       title: choice.title,
       emoji: choice.emoji,
+      image: choice.image,
     }
     void play(target)
   }
@@ -187,6 +194,7 @@ export default function App() {
             <PictureButton
               key={`${c.sourceId}:${c.ref}`}
               emoji={c.emoji}
+              image={c.image}
               label={c.title}
               color="#5b6bff"
               onClick={() => start(c)}

@@ -37,8 +37,4 @@ export const appleMusicSource: MusicSource = {
   },
 
   stop() {},
-  setVolume(_v: number) {},
-  currentTimeSec() {
-    return 0
-  },
-}
+  setVolume(_v: number) {},}

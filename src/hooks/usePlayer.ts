@@ -6,6 +6,7 @@ export interface NowPlaying {
   ref: string
   title: string
   emoji: string
+  image?: string
 }
 
 /**

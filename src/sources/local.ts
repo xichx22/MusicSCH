@@ -94,8 +94,4 @@ export const localSource: MusicSource = {
   setVolume(v) {
     el().volume = Math.max(0, Math.min(1, v))
   },
-
-  currentTimeSec() {
-    return audio ? audio.currentTime : 0
-  },
 }

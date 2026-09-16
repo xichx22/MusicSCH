@@ -25,6 +25,6 @@ export const DEFAULT_SETTINGS: Settings = {
   dailyLimitMin: 30,
   maxVolume: 0.7,
   parentPin: '1234',
-  searchSourceId: 'local',
+  searchSourceId: 'spotify',
   searchEnabled: true,
 }

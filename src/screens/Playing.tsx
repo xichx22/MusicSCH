@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { NowPlaying } from '../hooks/usePlayer'
 
 /**
@@ -6,9 +7,18 @@ import type { NowPlaying } from '../hooks/usePlayer'
  * 버튼도 '그만' 하나만 크게 둔다.
  */
 export function Playing({ now, onStop }: { now: NowPlaying; onStop: () => void }) {
+  const [broken, setBroken] = useState(false)
+  useEffect(() => setBroken(false), [now.image])
+
   return (
     <div className="screen playing">
-      <div className="playing-art">{now.emoji}</div>
+      <div className="playing-art">
+        {now.image && !broken ? (
+          <img src={now.image} alt="" onError={() => setBroken(true)} />
+        ) : (
+          now.emoji
+        )}
+      </div>
       <p className="playing-title">{now.title}</p>
       <button className="stop" onClick={onStop}>
         <span className="stop-icon">⏹️</span>

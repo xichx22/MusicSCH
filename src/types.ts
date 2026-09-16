@@ -25,6 +25,8 @@ export interface Song {
   durationSec?: number
   /** 재생 화면에 크게 띄울 그림 */
   emoji?: string
+  /** 앨범 그림 같은 진짜 사진. 있으면 이모지 대신 이걸 보여준다. */
+  image?: string
   playCount: number
   /**
    * 아빠가 확인한 곡인가?
