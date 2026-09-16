@@ -8,6 +8,7 @@ import { SpotifyPanel } from '../sources/spotify/Panel'
 import { clear as clearDiag, entries as diagEntries } from '../library/diag'
 import { ComboCheck } from './ComboCheck'
 import { CardArt } from './CardArt'
+import { AddByLink } from './AddByLink'
 
 interface Props {
   db: DB
@@ -129,6 +130,8 @@ export function Admin({ db, setDb, onClose }: Props) {
       </section>
 
       {db.settings.searchSourceId === 'spotify' && <SpotifyPanel />}
+
+      <AddByLink db={db} setDb={setDb} />
 
       <CardArt db={db} setDb={setDb} />
 

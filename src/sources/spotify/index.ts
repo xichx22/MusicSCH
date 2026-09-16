@@ -201,6 +201,44 @@ async function recoverDevice(deviceId: string): Promise<string> {
   return chosen.id
 }
 
+/** 링크에서 트랙 id 를 뽑는다. open.spotify.com 주소와 spotify:track: 둘 다 받는다. */
+export function parseTrackId(input: string): string | null {
+  const v = input.trim()
+  const uri = v.match(/^spotify:track:([A-Za-z0-9]+)/)
+  if (uri) return uri[1]
+  const url = v.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?track\/([A-Za-z0-9]+)/)
+  if (url) return url[1]
+  // 아이디만 붙여넣은 경우
+  if (/^[A-Za-z0-9]{22}$/.test(v)) return v
+  return null
+}
+
+export interface TrackInfo {
+  title: string
+  image?: string
+  durationSec?: number
+}
+
+/**
+ * 트랙 하나의 정보를 가져온다.
+ *
+ * 검색 할당량이 떨어져도 이건 다른 바구니라 될 수 있다. 안 되면
+ * null 을 주고, 부르는 쪽이 제목 없이도 넣을 수 있게 한다.
+ */
+export async function getTrack(id: string): Promise<TrackInfo | null> {
+  try {
+    const t = await api<SpotifyTrack>(`/tracks/${encodeURIComponent(id)}?market=KR`)
+    if (!t) return null
+    return {
+      title: `${t.name} - ${t.artists.map((a) => a.name).join(', ')}`,
+      image: pickImage(t.album.images),
+      durationSec: Math.round(t.duration_ms / 1000),
+    }
+  } catch {
+    return null
+  }
+}
+
 export interface TopicArt {
   image: string
   /** 어느 앨범에서 가져왔는지. 아빠가 확인하라고 준다. */

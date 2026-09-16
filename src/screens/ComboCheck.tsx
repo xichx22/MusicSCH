@@ -15,6 +15,12 @@ const GAP_MS = 700
 const MAX_ERRORS = 3
 /** 같은 조합을 너무 자주 불러 막혔을 때 다시 시도하는 횟수. */
 const MAX_RETRIES = 4
+/**
+ * 한 번에 물어볼 조합 수.
+ * 238개를 한 번에 몰아쳤다가 할당량을 통째로 태웠고, 그 뒤로는 새 노래를
+ * 며칠 못 찾았다. 조금씩 나눠서 하면 남은 할당량으로 지한이가 계속 쓸 수 있다.
+ */
+const BATCH = 40
 
 interface Pair {
   character: Card
@@ -61,9 +67,11 @@ export function ComboCheck({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
     }
 
     const all = pairsOf(db)
-    const pairs = onlyNew
+    const todo = onlyNew
       ? all.filter(({ character, topic }) => !db.checks[comboKey(character.id, topic.id)])
       : all
+    // 남은 할당량을 한 번에 태우지 않게 조금씩 끊는다.
+    const pairs = todo.slice(0, BATCH)
     if (pairs.length === 0) {
       setNote('새로 확인할 조합이 없어.')
       return
@@ -125,9 +133,11 @@ export function ComboCheck({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
     // 점검한 것만 덮어쓴다. 못 물어본 조합은 건드리지 않는다.
     setDb((d) => ({ ...d, checks: { ...d.checks, ...found } }))
     setRunning(false)
+    const left = todo.length - done
     setNote(
       `${stopped ? stopped + ' · ' : ''}${done}개 확인, 노래 있는 조합 ${hits}개, ` +
-        `빈 조합 ${done - hits}개는 지한이 화면에서 감췄어`,
+        `빈 조합 ${done - hits}개는 지한이 화면에서 감췄어.` +
+        (left > 0 ? ` 아직 ${left}개 남았어 — [안 해본 것만] 으로 이어서 하면 돼.` : ''),
     )
   }
 
@@ -139,10 +149,10 @@ export function ComboCheck({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
         받은 결과는 제목·가수·앨범에 <strong>낱말이 전부 들어 있는 것만</strong> 남긴다.
         스포티파이 검색은 '타요 견인차' 에 송대관 유행가를 주기도 한다.
         전체 {pairsOf(db).length}개 조합 · 확인한 것 {checked}개 (노래 있음 {withSongs}개).
-        스포티파이 하루 할당량이 넉넉하지 않아 천천히 물어본다. 전부 하면
-        {Math.ceil((pairsOf(db).length * GAP_MS) / 60000)}분쯤 걸리니 화면을 켜둔 채로 기다려줘.
-        중간에 할당량이 떨어지면 거기까지 저장하고 멈춘다. 다음 날
-        <strong>안 해본 것만</strong> 으로 이어서 하면 된다.
+        스포티파이 할당량이 넉넉하지 않아 <strong>한 번에 {BATCH}개씩</strong>만 물어본다
+        (약 {Math.ceil((BATCH * GAP_MS) / 60000)}분). 끝나면 <strong>안 해본 것만</strong> 을
+        눌러 이어서 하면 된다. 할당량이 떨어지면 거기까지 저장하고 멈춘다.
+        한꺼번에 다 하려다 할당량을 통째로 태우면 며칠 동안 새 노래를 못 찾는다.
       </p>
       {running ? (
         <button onClick={() => { stopRef.current = true }}>멈추기</button>
