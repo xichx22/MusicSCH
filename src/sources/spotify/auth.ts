@@ -192,7 +192,16 @@ export class SpotifyAuthError extends Error {}
  * 실패로 치지 말고 기다렸다 다시 해야 한다.
  */
 export class SpotifyRateLimitError extends Error {
-  constructor(readonly retryAfterSec: number, message: string) {
+  constructor(
+    readonly retryAfterSec: number,
+    /**
+     * 할당량을 다 쓴 것인지(quota) 잠깐 너무 빨리 부른 것인지(rate limit).
+     * 스포티파이가 reason 으로 알려준다. 둘은 다루는 법이 다르다.
+     * 할당량은 기다렸다 다시 해도 안 풀리고, 재시도하면 더 깎인다.
+     */
+    readonly quota: boolean,
+    message: string,
+  ) {
     super(message)
   }
 }
@@ -223,8 +232,10 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T | 
 
   // 스포티파이는 { error: { status, message, reason } } 로 이유를 알려준다.
   let reason = ''
+  let quota = false
   try {
     const body = (await res.json()) as { error?: { message?: string; reason?: string } }
+    quota = body.error?.reason === 'QUOTA_EXCEEDED'
     reason = [body.error?.message, body.error?.reason].filter(Boolean).join(' / ')
   } catch {
     /* 본문이 없거나 JSON 이 아니면 상태 코드만으로 간다 */
@@ -238,9 +249,14 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T | 
   if (res.status === 403) throw new Error(`스포티파이가 거절했어 (${detail})`)
   if (res.status === 404) throw new Error(`대상을 못 찾았어 (${detail})`)
   if (res.status === 429) {
-    // 스포티파이가 Retry-After 헤더로 몇 초 쉬라고 알려준다.
     const after = Number(res.headers.get('Retry-After')) || 3
-    throw new SpotifyRateLimitError(after, `스포티파이가 ${after}초 쉬래 (${detail})`)
+    throw new SpotifyRateLimitError(
+      after,
+      quota,
+      quota
+        ? `오늘 쓸 수 있는 양을 다 썼어 (${detail})`
+        : `스포티파이가 ${after}초 쉬래 (${detail})`,
+    )
   }
   throw new Error(`스포티파이 오류 (${detail})`)
 }

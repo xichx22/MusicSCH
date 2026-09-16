@@ -5,8 +5,12 @@ import { getSource } from '../sources'
 import { SpotifyRateLimitError } from '../sources/spotify'
 import { setQuiet } from '../library/diag'
 
-/** 스포티파이에 너무 몰아치지 않도록 한 번 물어보고 쉬는 시간(ms). */
-const GAP_MS = 250
+/**
+ * 한 번 물어보고 쉬는 시간(ms).
+ * 개발자 모드는 하루 할당량이 넉넉하지 않다. 238개 조합을 250ms 간격으로
+ * 몰아쳤더니 한 번에 다 써버렸다. 천천히 간다.
+ */
+const GAP_MS = 700
 /** 연달아 이만큼 오류가 나면 뭔가 잘못된 것이니 멈춘다. */
 const MAX_ERRORS = 3
 /** 같은 조합을 너무 자주 불러 막혔을 때 다시 시도하는 횟수. */
@@ -89,8 +93,16 @@ export function ComboCheck({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
           errors = 0
           settled = true
         } catch (e) {
-          // 너무 자주 불러서 막힌 건 실패가 아니다. 기다렸다 같은 조합을 다시 물어본다.
           if (e instanceof SpotifyRateLimitError) {
+            /*
+             * 할당량을 다 쓴 것과 잠깐 너무 빨리 부른 것은 다르다.
+             * 할당량은 기다렸다 다시 해도 안 풀리고, 재시도하면 더 깎인다.
+             * 여기서 멈추고 지금까지 확인한 것만 저장한다.
+             */
+            if (e.quota) {
+              stopped = '오늘 쓸 수 있는 양을 다 썼어. 여기까지 저장했으니 내일 [안 해본 것만] 으로 이어서 하면 돼'
+              break
+            }
             tries += 1
             setNote(`${done}/${pairs.length} · 스포티파이가 ${e.retryAfterSec}초 쉬래, 기다리는 중`)
             await wait((e.retryAfterSec + 1) * 1000)
@@ -127,7 +139,10 @@ export function ComboCheck({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
         받은 결과는 제목·가수·앨범에 <strong>낱말이 전부 들어 있는 것만</strong> 남긴다.
         스포티파이 검색은 '타요 견인차' 에 송대관 유행가를 주기도 한다.
         전체 {pairsOf(db).length}개 조합 · 확인한 것 {checked}개 (노래 있음 {withSongs}개).
-        몇 분 걸리니 화면을 켜둔 채로 기다려줘.
+        스포티파이 하루 할당량이 넉넉하지 않아 천천히 물어본다. 전부 하면
+        {Math.ceil((pairsOf(db).length * GAP_MS) / 60000)}분쯤 걸리니 화면을 켜둔 채로 기다려줘.
+        중간에 할당량이 떨어지면 거기까지 저장하고 멈춘다. 다음 날
+        <strong>안 해본 것만</strong> 으로 이어서 하면 된다.
       </p>
       {running ? (
         <button onClick={() => { stopRef.current = true }}>멈추기</button>

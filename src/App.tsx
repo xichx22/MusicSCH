@@ -3,6 +3,7 @@ import type { Card, Song } from './types'
 import { comboKey, findApproved, load, newId, save, topicsFor, type DB } from './library/store'
 import { log as logDiag } from './library/diag'
 import { getSource } from './sources'
+import { SpotifyRateLimitError } from './sources/spotify'
 import { usePlayer, type NowPlaying } from './hooks/usePlayer'
 import { PickGrid } from './screens/PickGrid'
 import { Playing } from './screens/Playing'
@@ -76,6 +77,30 @@ export default function App() {
   const resolve = async (character: Card, topic: Card) => {
     const words = [character.word, topic.word]
     const fallbackEmoji = character.emoji
+    const key = comboKey(character.id, topic.id)
+
+    const toChoices = (songs: Song[]) =>
+      songs.slice(0, MAX_CHOICES).map<Choice>((s) => ({
+        ref: s.ref,
+        sourceId: s.sourceId,
+        title: s.title,
+        emoji: s.emoji ?? fallbackEmoji,
+        image: s.image,
+        songId: s.id,
+      }))
+
+    /*
+     * 전에 이 조합으로 찾아둔 곡이 있으면 그걸 쓴다.
+     * 아빠가 아직 확인 안 한 곡이어도 괜찮다. 지한이는 같은 조합을 몇 번씩
+     * 누르는데 그때마다 검색하면 스포티파이 하루 할당량이 금방 바닥난다.
+     * 실제로 조합 점검 한 번에 다 써버렸다.
+     */
+    const remembered = db.songs.filter((s) => s.combo === key)
+    if (remembered.length > 0) {
+      const choices = toChoices(remembered)
+      if (choices.length === 1) return start(choices[0])
+      return setStep({ name: 'choose', character, topic, choices })
+    }
 
     // A: 아빠가 확인해둔 노래
     const hits = findApproved(db.songs, words).slice(0, MAX_CHOICES)
@@ -106,7 +131,16 @@ export default function App() {
 
     setBusy(true)
     try {
-      const found = await source.search(words.join(' '))
+      let found
+      try {
+        found = await source.search(words.join(' '))
+      } catch (e) {
+        // 잠깐 너무 빨리 부른 것뿐이면 한 번만 기다렸다 다시 해본다.
+        // 할당량을 다 쓴 것이면 기다려도 안 풀리니 그대로 넘긴다.
+        if (!(e instanceof SpotifyRateLimitError) || e.quota) throw e
+        await new Promise((r) => setTimeout(r, (e.retryAfterSec + 1) * 1000))
+        found = await source.search(words.join(' '))
+      }
       // 이 조합에 노래가 있는지 기억해둔다. 없으면 다음부터 카드를 감춘다.
       setDb((d) => ({
         ...d,
@@ -125,6 +159,7 @@ export default function App() {
         durationSec: r.durationSec,
         emoji: fallbackEmoji,
         image: r.thumbnail,
+        combo: key,
         playCount: 0,
         approved: false,
         addedAt: Date.now(),

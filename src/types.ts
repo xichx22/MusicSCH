@@ -39,6 +39,12 @@ export interface Song {
   ref: string
   /** 카드 조합과 맞춰볼 말들. 예: ['뽀로로', '소방차'] */
   tags: string[]
+  /**
+   * 어느 카드 조합으로 찾아낸 곡인지 (`캐릭터id:주제id`).
+   * 같은 조합을 또 누를 때 검색을 다시 하지 않으려고 적어둔다.
+   * 스포티파이 할당량이 넉넉하지 않다.
+   */
+  combo?: string
   durationSec?: number
   /** 재생 화면에 크게 띄울 그림 */
   emoji?: string
