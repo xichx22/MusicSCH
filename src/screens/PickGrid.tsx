@@ -45,9 +45,14 @@ export function PickGrid({ cards, chosen, onPick, onBack, pageSize = DEFAULT_PAG
         ))}
       </div>
 
+      {/*
+        첫 화면에는 집 버튼도 페이지 버튼도 없다. 그때 빈 줄을 그리면
+        112px 를 그냥 잡아먹어서 카드가 그만큼 작아진다.
+      */}
+      {(onBack || pageCount > 1) && (
       <div className="bottom-row">
         {onBack && (
-          <button className="back" onClick={onBack} aria-label="뒤로">
+          <button className="back" onClick={onBack} aria-label="처음으로">
             <HomeIcon />
           </button>
         )}
@@ -75,6 +80,7 @@ export function PickGrid({ cards, chosen, onPick, onBack, pageSize = DEFAULT_PAG
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

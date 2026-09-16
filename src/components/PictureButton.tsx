@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { CardIcon } from './icons'
 
 interface Props {
+  id: string
   emoji: string
   image?: string
   label: string
@@ -11,12 +13,17 @@ interface Props {
 }
 
 /**
- * 아이가 누르는 그림 버튼.
- * 글씨는 아빠가 알아보라고 작게만 넣는다. 아이는 그림만 본다.
+ * 아이가 누르는 그림 카드.
+ *
+ * 흰 종이 타일 안에 동그란 색판을 두고 그 안에 그림을 넣는다. 카드마다
+ * 배경색을 통째로 칠하면 원색이 여섯 개씩 부딪혀서 촌스러워진다.
+ * 색은 동그라미에만 쓰고, 카드는 종이색으로 통일한다.
+ *
+ * 글씨는 아빠가 알아보라고 넣는 것이고 아이는 그림만 본다.
  * 움직이는 효과는 넣지 않는다 (누를 때 살짝 눌리는 것만).
  */
-export function PictureButton({ emoji, image, label, color, onClick, static: isStatic }: Props) {
-  // 앨범 그림을 못 불러오면 깨진 그림 대신 이모지를 보여준다.
+export function PictureButton({ id, emoji, image, label, color, onClick, static: isStatic }: Props) {
+  // 사진을 못 불러오면 깨진 그림 대신 그려둔 아이콘으로 돌아간다.
   const [broken, setBroken] = useState(false)
   useEffect(() => setBroken(false), [image])
   const showImage = image && !broken
@@ -24,15 +31,14 @@ export function PictureButton({ emoji, image, label, color, onClick, static: isS
   return (
     <button
       className={`pic${isStatic ? ' pic-static' : ''}`}
-      style={{ background: color }}
       onClick={isStatic ? undefined : onClick}
       disabled={isStatic}
     >
-      <span className="pic-art">
+      <span className="pic-art" style={{ background: color }}>
         {showImage ? (
           <img src={image} alt="" onError={() => setBroken(true)} />
         ) : (
-          <span className="pic-emoji">{emoji}</span>
+          <CardIcon cardId={id} emoji={emoji} />
         )}
       </span>
       <span className="pic-label">{label}</span>

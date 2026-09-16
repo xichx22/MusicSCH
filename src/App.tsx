@@ -206,10 +206,11 @@ export default function App() {
           {step.choices.map((c) => (
             <PictureButton
               key={`${c.sourceId}:${c.ref}`}
+              id={`song:${c.ref}`}
               emoji={c.emoji}
               image={c.image}
               label={c.title}
-              color="#5b6bff"
+              color="#E4DFF3"
               onClick={() => start(c)}
             />
           ))}
