@@ -673,3 +673,18 @@ body {
 .diag-what { font-weight: 700; }
 .diag-detail { grid-column: 2; color: var(--ink-soft); word-break: break-word; }
 .diag li.bad .diag-what { color: var(--accent); }
+
+/* 카드 목록 내보내기 — 아빠가 복사해서 보내는 칸 */
+.export-box {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}

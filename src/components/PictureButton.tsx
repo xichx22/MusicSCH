@@ -3,6 +3,8 @@ import { CardIcon } from './icons'
 
 interface Props {
   id: string
+  /** 카드에 적힌 말. 알아서 만든 카드는 이걸로 그림을 찾는다. */
+  word?: string
   emoji: string
   image?: string
   label: string
@@ -22,7 +24,7 @@ interface Props {
  * 글씨는 아빠가 알아보라고 넣는 것이고 아이는 그림만 본다.
  * 움직이는 효과는 넣지 않는다 (누를 때 살짝 눌리는 것만).
  */
-export function PictureButton({ id, emoji, image, label, color, onClick, static: isStatic }: Props) {
+export function PictureButton({ id, word, emoji, image, label, color, onClick, static: isStatic }: Props) {
   // 사진을 못 불러오면 깨진 그림 대신 그려둔 아이콘으로 돌아간다.
   const [broken, setBroken] = useState(false)
   useEffect(() => setBroken(false), [image])
@@ -38,7 +40,7 @@ export function PictureButton({ id, emoji, image, label, color, onClick, static:
         {showImage ? (
           <img src={image} alt="" onError={() => setBroken(true)} />
         ) : (
-          <CardIcon cardId={id} emoji={emoji} />
+          <CardIcon cardId={id} word={word} emoji={emoji} />
         )}
       </span>
       <span className="pic-label">{label}</span>

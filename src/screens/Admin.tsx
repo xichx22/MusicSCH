@@ -10,6 +10,7 @@ import { ComboCheck } from './ComboCheck'
 import { CardArt } from './CardArt'
 import { AddByLink } from './AddByLink'
 import { BuildCards } from './BuildCards'
+import { ExportList } from './ExportList'
 
 interface Props {
   db: DB
@@ -168,6 +169,8 @@ export function Admin({ db, setDb, onClose }: Props) {
       <BuildCards db={db} setDb={setDb} />
 
       <CardArt db={db} setDb={setDb} />
+
+      <ExportList db={db} />
 
       <ComboCheck db={db} setDb={setDb} />
 
