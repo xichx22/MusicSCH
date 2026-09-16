@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { comboKey, newId, type DB } from '../library/store'
 import { mentions } from '../library/match'
 import { getLinkTracks, parseLink, type BulkTrack } from '../sources/spotify'
+import { RECOMMENDED_ALBUMS, albumUrl } from '../library/albums'
 import type { Card, Song } from '../types'
 
 interface Planned {
@@ -29,6 +30,7 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
   const [fallbackId, setFallbackId] = useState('')
   const [link, setLink] = useState('')
   const [plan, setPlan] = useState<Planned[] | null>(null)
+  const [albumId, setAlbumId] = useState<string | null>(null)
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -51,6 +53,7 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
     }
     setBusy(true)
     setPlan(null)
+    setAlbumId(parsed.kind === 'album' ? parsed.id : null)
     try {
       const tracks = await getLinkTracks(parsed)
       if (tracks.length === 0) {
@@ -87,6 +90,7 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
         durationSec: track.durationSec,
         emoji: target.emoji,
         image: track.image,
+        fromAlbum: albumId ?? undefined,
         playCount: 0,
         approved: true,
         addedAt: Date.now(),
@@ -121,6 +125,20 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
         <strong> 앨범이나 재생목록 링크를 넣으면 곡 전체가 한 번에</strong> 들어오고,
         곡 제목을 보고 어느 주제 카드인지까지 알아서 정한다.
       </p>
+
+      <Recommended
+        db={db}
+        onPick={(a) => {
+          setCharacterId(a.characterId)
+          setLink(albumUrl(a.id))
+          setPlan(null)
+          setNote(`"${a.title}" 링크를 넣었어. [가져오기] 를 눌러줘.`)
+        }}
+        onRemove={(id, title) => {
+          setDb((d) => ({ ...d, songs: d.songs.filter((x) => x.fromAlbum !== id) }))
+          setNote(`"${title}" 로 넣었던 노래를 지웠어.`)
+        }}
+      />
 
       <label>
         누구 노래
@@ -182,5 +200,66 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
         </>
       )}
     </section>
+  )
+}
+
+/**
+ * 웹에서 찾아둔 스포티파이 앨범 목록.
+ *
+ * 누르면 링크가 채워지고, 가져오기를 누르면 스포티파이에서 진짜 수록곡을
+ * 받아온다. 곡 정보는 내 추측이 아니라 스포티파이가 주는 값이다.
+ * 마음에 안 들면 앨범 단위로 되돌린다.
+ */
+function Recommended({
+  db,
+  onPick,
+  onRemove,
+}: {
+  db: DB
+  onPick: (a: (typeof RECOMMENDED_ALBUMS)[number]) => void
+  onRemove: (albumId: string, title: string) => void
+}) {
+  const nameOf = (id: string) => {
+    const c = db.cards.find((x) => x.id === id)
+    return c ? (c.label ?? c.word) : id
+  }
+  const imported = (id: string) => db.songs.filter((s) => s.fromAlbum === id).length
+
+  const groups = [...new Set(RECOMMENDED_ALBUMS.map((a) => a.characterId))]
+
+  return (
+    <div className="recommend">
+      <p className="hint">
+        웹에서 찾아둔 앨범이야. 누르면 링크가 채워지고, <strong>가져오기</strong> 를 누르면
+        스포티파이에서 진짜 수록곡을 받아온다. 넣기 전에 목록을 보여주니 이상하면 그때 취소하면 돼.
+        넣은 뒤에도 앨범별로 되돌릴 수 있다.
+        <br />
+        <strong>뽀로로는 스포티파이 앨범을 못 찾았어</strong> — 애플뮤직·벅스에만 잡혀서,
+        뽀로로 앨범은 아빠가 직접 링크를 복사해 넣어야 해.
+      </p>
+      {groups.map((cid) => (
+        <div key={cid} className="recommend-group">
+          <strong>{nameOf(cid)}</strong>
+          <div className="recommend-chips">
+            {RECOMMENDED_ALBUMS.filter((a) => a.characterId === cid).map((a) => {
+              const n = imported(a.id)
+              return (
+                <span key={a.id} className="chip">
+                  <button className="link" onClick={() => onPick(a)}>
+                    {a.title}
+                    {n > 0 ? ` (${n}곡 넣음)` : ''}
+                  </button>
+                  {n > 0 && (
+                    <button className="link danger" onClick={() => onRemove(a.id, a.title)}>
+                      되돌리기
+                    </button>
+                  )}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }

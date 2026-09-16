@@ -45,6 +45,11 @@ export interface Song {
    * 스포티파이 할당량이 넉넉하지 않다.
    */
   combo?: string
+  /**
+   * 앨범 링크로 한꺼번에 넣은 곡이면 그 앨범 id.
+   * 마음에 안 들 때 앨범 단위로 되돌리려고 적어둔다.
+   */
+  fromAlbum?: string
   durationSec?: number
   /** 재생 화면에 크게 띄울 그림 */
   emoji?: string
