@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { NowPlaying } from '../hooks/usePlayer'
+import { StopIcon } from '../components/Icon'
 
 /**
  * 재생 화면.
@@ -21,7 +22,7 @@ export function Playing({ now, onStop }: { now: NowPlaying; onStop: () => void }
       </div>
       <p className="playing-title">{now.title}</p>
       <button className="stop" onClick={onStop}>
-        <span className="stop-icon">⏹️</span>
+        <span className="stop-icon"><StopIcon /></span>
         <span className="stop-label">그만</span>
       </button>
     </div>

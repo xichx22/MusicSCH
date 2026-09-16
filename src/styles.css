@@ -1,12 +1,26 @@
 /*
  * 30개월 지한이용 화면.
- * 규칙: 버튼은 크게, 한 화면에 다 보이게, 스크롤 없게, 움직이는 건 없게.
+ * 규칙: 버튼은 크게, 글씨는 굵고 크게, 한 화면에 다 보이게, 스크롤 없게,
+ * 움직이는 건 없게(누를 때 살짝 눌리는 것만).
  */
 :root {
-  --bg: #12131a;
   --fg: #ffffff;
-  --muted: #9aa0b4;
+  --muted: #a6adc4;
   --gap: 2vmin;
+  --radius: 4.5vmin;
+  --control: #262b45;
+  --control-on: #353c60;
+  /* 집(처음으로) 버튼은 페이지 버튼과 색을 달리해서 구별되게 한다. */
+  --home: #4b5183;
+  --home-on: #5b62a0;
+  /* 아빠 버튼이 구석에 차지하는 자리. 다른 버튼이 여기까지 오면 안 된다. */
+  --gate: 56px;
+  /*
+   * 폰을 세로로 들면 vmin 이 '가로폭' 이라 vmin 만 쓰면 글씨와 버튼이 작아진다.
+   * 긴 쪽(vmax)을 기준으로 잡고 clamp 로 위아래를 막는다.
+   */
+  --label: clamp(22px, 3.4vmax, 38px);
+  --btn: clamp(76px, 9vmax, 112px);
 }
 
 * { box-sizing: border-box; }
@@ -17,7 +31,9 @@ html, body, #root {
 }
 
 body {
-  background: var(--bg);
+  /* 깜깜한 검정보다 살짝 푸른 밤하늘이 카드 색을 더 살린다. */
+  background: radial-gradient(130% 100% at 50% 0%, #262d4d 0%, #171b2e 45%, #0f1220 100%);
+  background-attachment: fixed;
   color: var(--fg);
   font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
   /* 아이가 실수로 확대하거나 길게 눌러 텍스트를 선택하지 못하게 */
@@ -57,33 +73,62 @@ body {
 }
 
 .pic {
+  position: relative;
+  overflow: hidden;
   border: none;
-  border-radius: 4vmin;
+  border-radius: var(--radius);
   color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.5vmin;
-  padding: 1vmin;
+  justify-content: flex-end;
+  padding: 0;
   min-height: 0;
   cursor: pointer;
+  /* 위쪽에 빛이 닿은 것처럼 테두리를 한 줄 넣으면 블록처럼 만져 보인다. */
+  box-shadow:
+    inset 0 0.35vmin 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 0.2vmin rgba(0, 0, 0, 0.12),
+    0 1vmin 2.5vmin rgba(0, 0, 0, 0.38);
   transition: transform 0.08s ease;
 }
 
+/* 위는 밝게 아래는 어둡게. 아래쪽이 어두워야 글씨가 그림 위에서도 읽힌다. */
+.pic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(0, 0, 0, 0.05) 60%,
+    rgba(0, 0, 0, 0.42) 100%
+  );
+  pointer-events: none;
+}
+
 .pic:active { transform: scale(0.96); }
-.pic-static { opacity: 1; cursor: default; }
+.pic-static { cursor: default; }
 
 .pic-art {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 0;
   width: 100%;
+  padding: 1.2vmin 1.2vmin 0;
 }
 
-.pic-emoji { font-size: min(14vmin, 110px); line-height: 1; }
+.pic-emoji {
+  font-size: clamp(56px, 11vmax, 140px);
+  line-height: 1;
+  filter: drop-shadow(0 0.6vmin 1vmin rgba(0, 0, 0, 0.3));
+}
+
 /*
  * width/height 를 100% 로 줘야 그림이 카드를 채운다.
  * max-* 만 주면 원본이 작을 때(스포티파이는 300px 쯤을 준다) 그 크기 그대로
@@ -93,12 +138,18 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 2vmin;
 }
 
 .pic-label {
-  font-size: min(3.2vmin, 22px);
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 1;
+  font-size: var(--label);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  padding: 0 1.5vmin 1.6vmin;
+  text-shadow: 0 0.25vmin 0.6vmin rgba(0, 0, 0, 0.55);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -109,15 +160,31 @@ body {
 .chosen-strip {
   display: flex;
   align-items: center;
-  gap: var(--gap);
-  height: 16vmin;
+  gap: 2.5vmin;
+  height: clamp(76px, 10vmax, 124px);
   flex: 0 0 auto;
+  padding-left: 0.5vmin;
 }
 
-.chosen-strip .pic { width: 16vmin; height: 100%; }
-.chosen-strip .pic-emoji { font-size: 8vmin; }
-.chosen-strip .pic-label { font-size: 2.2vmin; }
-.plus, .question { font-size: 6vmin; color: var(--muted); }
+.chosen-strip .pic {
+  width: clamp(76px, 10vmax, 124px);
+  height: 100%;
+  border-radius: 3.5vmin;
+}
+
+.chosen-strip .pic-emoji { font-size: clamp(34px, 5.5vmax, 66px); }
+
+.chosen-strip .pic-label {
+  font-size: clamp(11px, 1.5vmax, 16px);
+  padding: 0 0.8vmin 0.8vmin;
+}
+
+.plus, .question {
+  font-size: clamp(30px, 4.5vmax, 54px);
+  font-weight: 800;
+  color: #5d6688;
+  line-height: 1;
+}
 
 /* ---------- 아래 줄 (뒤로 + 페이지 넘김) ---------- */
 .bottom-row {
@@ -126,127 +193,192 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: var(--gap);
-  min-height: 11vmin;
+  min-height: var(--btn);
+  /* 오른쪽 구석은 아빠 버튼 자리다. 여기까지 오면 겹친다. */
+  padding-right: var(--gate);
 }
+
+/* ---------- 동그란 버튼 (뒤로 · 페이지) ---------- */
+.back,
+.page-btn {
+  flex: 0 0 auto;
+  min-width: 0;
+  width: var(--btn);
+  height: var(--btn);
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--control);
+  color: #eef1ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0.35vmin 0 rgba(255, 255, 255, 0.22),
+    0 0.8vmin 2vmin rgba(0, 0, 0, 0.4);
+  transition: transform 0.08s ease, background 0.08s ease;
+}
+
+.back svg,
+.page-btn svg {
+  width: 52%;
+  height: 52%;
+}
+
+.back:active,
+.page-btn:active {
+  transform: scale(0.94);
+  background: var(--control-on);
+}
+
+.back {
+  background: var(--home);
+}
+
+.back:active { background: var(--home-on); }
+
+.back-inline { align-self: center; }
 
 .pager {
   display: flex;
   align-items: center;
-  gap: 2vmin;
+  gap: 2.5vmin;
   margin-left: auto;
+  min-width: 0;
 }
 
-.page-btn {
-  background: #272a38;
-  border: none;
-  border-radius: 3vmin;
-  color: #fff;
-  font-size: 5vmin;
-  padding: 1.5vmin 5vmin;
-  cursor: pointer;
+.page-dots {
+  display: flex;
+  gap: 1.4vmin;
+  /* 자리가 모자라면 점이 먼저 줄어들어야 한다. 버튼이 밀려나면 안 된다. */
+  min-width: 0;
+  overflow: hidden;
 }
 
-.page-btn:active { background: #363a4d; }
-
-.page-dots { display: flex; gap: 1.2vmin; }
+/* 폰처럼 좁은 화면에서는 점을 접는다. 점은 아빠용 표시라 없어도 된다. */
+@media (max-width: 560px) {
+  .page-dots { display: none; }
+}
 
 .dot {
-  width: 1.6vmin;
-  height: 1.6vmin;
+  width: clamp(9px, 1.2vmax, 15px);
+  height: clamp(9px, 1.2vmax, 15px);
   border-radius: 50%;
-  background: #3a3f52;
+  background: #454b70;
 }
 
-.dot.on { background: #fff; }
-
-/* ---------- 뒤로 ---------- */
-.back {
-  flex: 0 0 auto;
-  align-self: flex-start;
-  background: #272a38;
-  border: none;
-  border-radius: 3vmin;
-  color: #fff;
-  font-size: 5vmin;
-  padding: 1.5vmin 4vmin;
-  cursor: pointer;
+.dot.on {
+  background: #fff;
+  box-shadow: 0 0 0 0.5vmin rgba(255, 255, 255, 0.16);
 }
-
-.back-inline { align-self: center; }
 
 /* ---------- 재생 화면 (움직이는 것 없음) ---------- */
 .playing {
   align-items: center;
   justify-content: center;
   text-align: center;
+  gap: 3vmin;
 }
 
 .playing-art {
-  font-size: min(40vmin, 340px);
-  line-height: 1;
+  width: min(78vw, 58vh, 440px);
+  height: min(78vw, 58vh, 440px);
+  border-radius: 7vmin;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: min(52vw, 38vh, 280px);
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow:
+    inset 0 0 0 0.5vmin rgba(255, 255, 255, 0.1),
+    0 2vmin 6vmin rgba(0, 0, 0, 0.45);
 }
 
 .playing-art img {
-  width: min(50vmin, 420px);
-  height: min(50vmin, 420px);
-  object-fit: contain;
-  border-radius: 4vmin;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .playing-title {
-  font-size: min(4vmin, 28px);
+  font-size: clamp(15px, 2.2vmax, 26px);
+  font-weight: 600;
   color: var(--muted);
   margin: 0;
   max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stop {
-  background: #e5484d;
+  background: linear-gradient(180deg, #ff6a6f 0%, #e5484d 100%);
   border: none;
-  border-radius: 6vmin;
+  border-radius: 999px;
   color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 2vmin;
-  padding: 3vmin 8vmin;
+  gap: 2.5vmin;
+  padding: 2.8vmin 8vmin;
+  box-shadow:
+    inset 0 0.4vmin 0 rgba(255, 255, 255, 0.3),
+    0 1.2vmin 3vmin rgba(229, 72, 77, 0.35);
+  transition: transform 0.08s ease;
 }
 
-.stop-icon { font-size: 8vmin; }
-.stop-label { font-size: 6vmin; font-weight: 800; }
+.stop:active { transform: scale(0.96); }
+
+.stop-icon {
+  display: flex;
+  width: clamp(34px, 5vmax, 60px);
+  height: clamp(34px, 5vmax, 60px);
+}
+
+.stop-icon svg { width: 100%; height: 100%; }
+.stop-label { font-size: clamp(28px, 4.2vmax, 50px); font-weight: 800; letter-spacing: -0.02em; }
 
 /* ---------- 안내 화면 ---------- */
 .message {
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 3vmin;
+  gap: 4vmin;
 }
 
-.message-art { font-size: min(30vmin, 240px); line-height: 1; }
-.message-text { font-size: min(5vmin, 34px); margin: 0; }
+.message-art { font-size: min(46vw, 34vh, 240px); line-height: 1; }
+
+.message-text {
+  font-size: clamp(24px, 3.6vmax, 40px);
+  font-weight: 700;
+  margin: 0;
+}
 
 /* ---------- 아빠 문 ---------- */
+/*
+ * 아빠 화면 들어가는 문. 오른쪽 아래 구석에 고정이라,
+ * 아래 줄에 --gate 만큼 자리를 비워둬야 페이지 버튼과 안 겹친다.
+ */
 .gate-dot {
   position: fixed;
   right: 0;
   bottom: 0;
-  width: 44px;
-  height: 44px;
+  width: var(--gate);
+  height: var(--gate);
   background: transparent;
   border: none;
   cursor: pointer;
-  opacity: 0.12;
+  opacity: 0.18;
 }
 
 .gate-dot::after {
   content: '';
   display: block;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #fff;
   margin: auto;

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Card } from '../types'
 import { PictureButton } from '../components/PictureButton'
+import { HomeIcon, NextIcon, PrevIcon } from '../components/Icon'
 
 /**
  * 한 화면에 보여줄 카드 수.
@@ -47,7 +48,7 @@ export function PickGrid({ cards, chosen, onPick, onBack, pageSize = DEFAULT_PAG
       <div className="bottom-row">
         {onBack && (
           <button className="back" onClick={onBack} aria-label="뒤로">
-            ⬅️
+            <HomeIcon />
           </button>
         )}
         {pageCount > 1 && (
@@ -57,7 +58,7 @@ export function PickGrid({ cards, chosen, onPick, onBack, pageSize = DEFAULT_PAG
               onClick={() => setPage((p) => (p - 1 + pageCount) % pageCount)}
               aria-label="이전"
             >
-              ◀
+              <PrevIcon />
             </button>
             <span className="page-dots">
               {Array.from({ length: pageCount }, (_, i) => (
@@ -69,7 +70,7 @@ export function PickGrid({ cards, chosen, onPick, onBack, pageSize = DEFAULT_PAG
               onClick={() => setPage((p) => (p + 1) % pageCount)}
               aria-label="더 보기"
             >
-              ▶
+              <NextIcon />
             </button>
           </div>
         )}

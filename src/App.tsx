@@ -10,6 +10,7 @@ import { Message } from './screens/Message'
 import { Admin } from './screens/Admin'
 import { PictureButton } from './components/PictureButton'
 import { ParentGate } from './components/ParentGate'
+import { HomeIcon } from './components/Icon'
 
 /** 아이에게 한 번에 보여줄 노래 후보 수. 많으면 고르질 못한다. */
 const MAX_CHOICES = 4
@@ -214,7 +215,9 @@ export default function App() {
           ))}
         </div>
         <div className="bottom-row">
-          <button className="back" onClick={goHome} aria-label="뒤로">⬅️</button>
+          <button className="back" onClick={goHome} aria-label="뒤로">
+            <HomeIcon />
+          </button>
         </div>
       </div>
     )
