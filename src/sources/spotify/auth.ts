@@ -187,7 +187,12 @@ export async function getAccessToken(): Promise<string | null> {
 
 export class SpotifyAuthError extends Error {}
 
-/** 스포티파이 Web API 호출. 204(내용 없음)는 null 을 준다. */
+/**
+ * 스포티파이 Web API 호출. 204(내용 없음)는 null 을 준다.
+ *
+ * 실패하면 스포티파이가 보내준 진짜 이유를 그대로 메시지에 담는다.
+ * 뭉뚱그린 오류 문구는 원인을 못 찾게 만든다.
+ */
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T | null> {
   const token = await getAccessToken()
   if (!token) throw new SpotifyAuthError('스포티파이에 로그인이 안 돼 있어')
@@ -201,11 +206,27 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T | 
     },
   })
 
-  if (res.status === 401) throw new SpotifyAuthError('로그인이 만료됐어. 다시 로그인해줘')
-  if (res.status === 403) throw new Error('Premium 계정이어야 재생할 수 있어')
-  if (res.status === 404) throw new Error('재생할 기기를 못 찾았어')
-  if (res.status === 429) throw new Error('스포티파이가 잠깐 쉬래. 조금 있다 다시 해줘')
-  if (!res.ok) throw new Error(`스포티파이 오류 (${res.status})`)
-  if (res.status === 204) return null
-  return (await res.json()) as T
+  if (res.ok) {
+    if (res.status === 204) return null
+    return (await res.json()) as T
+  }
+
+  // 스포티파이는 { error: { status, message, reason } } 로 이유를 알려준다.
+  let reason = ''
+  try {
+    const body = (await res.json()) as { error?: { message?: string; reason?: string } }
+    reason = [body.error?.message, body.error?.reason].filter(Boolean).join(' / ')
+  } catch {
+    /* 본문이 없거나 JSON 이 아니면 상태 코드만으로 간다 */
+  }
+
+  const endpoint = path.split('?')[0]
+  const where = `${endpoint} → ${res.status}`
+  const detail = reason ? `${where} · ${reason}` : where
+
+  if (res.status === 401) throw new SpotifyAuthError(`로그인이 만료됐어. 다시 로그인해줘 (${detail})`)
+  if (res.status === 403) throw new Error(`스포티파이가 거절했어 (${detail})`)
+  if (res.status === 404) throw new Error(`대상을 못 찾았어 (${detail})`)
+  if (res.status === 429) throw new Error(`스포티파이가 잠깐 쉬래 (${detail})`)
+  throw new Error(`스포티파이 오류 (${detail})`)
 }

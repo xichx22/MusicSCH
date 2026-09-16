@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Card, Song } from './types'
 import { findApproved, load, newId, save, type DB } from './library/store'
+import { log as logDiag } from './library/diag'
 import { getSource } from './sources'
 import { usePlayer, type NowPlaying } from './hooks/usePlayer'
 import { PickGrid } from './screens/PickGrid'
@@ -94,8 +95,12 @@ export default function App() {
     // B: 새 노래 찾아보기.
     // 고른 소스가 아직 준비가 안 됐으면(로그인 전 등) 내 음원에서라도 찾아본다.
     let source = getSource(db.settings.searchSourceId)
-    if (!(await source.isReady())) source = getSource('local')
+    if (!(await source.isReady())) {
+      logDiag(`${source.label} 준비 안 됨`, false, source.readyHint())
+      source = getSource('local')
+    }
     if (!db.settings.searchEnabled || !source.canSearch || !(await source.isReady())) {
+      logDiag('검색 못 함', false, db.settings.searchEnabled ? '쓸 수 있는 검색 소스가 없어' : '검색이 꺼져 있어')
       return setStep({ name: 'empty', character })
     }
 
@@ -132,7 +137,9 @@ export default function App() {
       }))
       if (choices.length === 1) return start(choices[0])
       setStep({ name: 'choose', character, topic, choices })
-    } catch {
+    } catch (e) {
+      // 지한이에게는 늘 같은 화면을 보여주되, 진짜 이유는 아빠 화면에 남긴다.
+      logDiag(`검색 실패 "${words.join(' ')}"`, false, e instanceof Error ? e.message : String(e))
       setStep({ name: 'empty', character })
     } finally {
       setBusy(false)

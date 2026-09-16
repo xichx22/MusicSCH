@@ -1,4 +1,5 @@
 import type { MusicSource, SearchResult } from '../types'
+import { log } from '../../library/diag'
 import { api, getClientId, isLoggedIn } from './auth'
 import {
   activateForMobile,
@@ -69,9 +70,15 @@ export const spotifySource: MusicSource = {
     const res = await api<{ tracks: { items: SpotifyTrack[] } }>(`/search?${params}`)
     const items = res?.tracks?.items ?? []
 
-    return items
-      // 아이가 듣는 앱이라 성인 표시된 곡은 아예 뺀다.
-      .filter((t) => !t.explicit)
+    // 아이가 듣는 앱이라 성인 표시된 곡은 아예 뺀다.
+    const kept = items.filter((t) => !t.explicit)
+    log(
+      `스포티파이 검색 "${query}"`,
+      kept.length > 0,
+      `받은 곡 ${items.length}개, 성인곡 제외 후 ${kept.length}개`,
+    )
+
+    return kept
       .map((t) => ({
         ref: t.uri,
         title: `${t.name} - ${t.artists.map((a) => a.name).join(', ')}`,

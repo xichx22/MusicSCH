@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getSource } from '../sources'
+import { log as logDiag } from '../library/diag'
 
 export interface NowPlaying {
   sourceId: string
@@ -34,8 +35,10 @@ export function usePlayer(maxVolume: number, onTick: (sec: number) => void) {
         await source.play(target.ref, () => setNow(null))
         setNow(target)
       } catch (e) {
+        const message = e instanceof Error ? e.message : String(e)
+        logDiag(`재생 실패 "${target.title}"`, false, message)
         setNow(null)
-        setError(e instanceof Error ? e.message : '노래를 틀 수 없어요')
+        setError(message)
       }
     },
     [maxVolume],

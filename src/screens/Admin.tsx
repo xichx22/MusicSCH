@@ -5,6 +5,7 @@ import type { Song } from '../types'
 import { SOURCES, getSource } from '../sources'
 import { loadManifest, localRef } from '../sources/local'
 import { SpotifyPanel } from '../sources/spotify/Panel'
+import { clear as clearDiag, entries as diagEntries } from '../library/diag'
 
 interface Props {
   db: DB
@@ -127,6 +128,8 @@ export function Admin({ db, setDb, onClose }: Props) {
 
       {db.settings.searchSourceId === 'spotify' && <SpotifyPanel />}
 
+      <Diagnostics />
+
       <section>
         <h2>음원 불러오기</h2>
         <button onClick={importLocal}>public/songs 다시 읽기</button>
@@ -189,5 +192,52 @@ function SongList({
         </li>
       ))}
     </ul>
+  )
+}
+
+/**
+ * 무슨 일이 있었는지 보여주는 칸.
+ * "그 노래는 아직 없어요" 가 진짜 0건이어서였는지, 오류로 실패한 건지 여기서 갈린다.
+ */
+function Diagnostics() {
+  const [rows, setRows] = useState(diagEntries)
+
+  return (
+    <section>
+      <h2>
+        무슨 일이 있었나
+        <button className="link" onClick={() => setRows(diagEntries())}>
+          새로고침
+        </button>
+        {rows.length > 0 && (
+          <button
+            className="link"
+            onClick={() => {
+              clearDiag()
+              setRows([])
+            }}
+          >
+            지우기
+          </button>
+        )}
+      </h2>
+      {rows.length === 0 ? (
+        <p className="hint">아직 기록이 없어. 카드를 눌러보고 다시 와줘.</p>
+      ) : (
+        <ul className="diag">
+          {rows.map((r) => (
+            <li key={r.at} className={r.ok ? 'ok' : 'bad'}>
+              <span className="diag-time">
+                {new Date(r.at).toLocaleTimeString('ko-KR', { hour12: false })}
+              </span>
+              <span className="diag-what">
+                {r.ok ? '✅' : '⚠️'} {r.what}
+              </span>
+              <span className="diag-detail">{r.detail}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
