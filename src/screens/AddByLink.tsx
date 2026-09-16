@@ -240,21 +240,21 @@ function Recommended({
       {groups.map((cid) => (
         <div key={cid} className="recommend-group">
           <strong>{nameOf(cid)}</strong>
-          <div className="recommend-chips">
+          <div className="album-list">
             {RECOMMENDED_ALBUMS.filter((a) => a.characterId === cid).map((a) => {
               const n = imported(a.id)
               return (
-                <span key={a.id} className="chip">
-                  <button className="link" onClick={() => onPick(a)}>
-                    {a.title}
-                    {n > 0 ? ` (${n}곡 넣음)` : ''}
+                <div key={a.id} className="album-row">
+                  <button className="album-btn" onClick={() => onPick(a)}>
+                    <span>{a.title}</span>
+                    {n > 0 && <small>{n}곡 넣음</small>}
                   </button>
                   {n > 0 && (
-                    <button className="link danger" onClick={() => onRemove(a.id, a.title)}>
+                    <button className="album-undo" onClick={() => onRemove(a.id, a.title)}>
                       되돌리기
                     </button>
                   )}
-                </span>
+                </div>
               )
             })}
           </div>

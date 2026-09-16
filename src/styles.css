@@ -564,27 +564,56 @@ body {
 .art-row label.row { margin: 0; }
 
 /* 추천 앨범 */
-.recommend { margin-bottom: 14px; }
-.recommend-group { margin: 10px 0; font-size: 13px; }
+.recommend { margin-bottom: 16px; }
+.recommend-group { margin: 12px 0; font-size: 13px; }
+.recommend-group > strong { display: block; margin-bottom: 6px; color: var(--ink-soft); }
 
-.recommend-chips {
+.album-list { display: flex; flex-direction: column; gap: 8px; }
+
+.album-row { display: flex; gap: 8px; }
+
+/*
+ * 손가락으로 누르는 버튼은 44px 아래로 내려가면 안 된다.
+ * 전에는 글자만 누를 수 있어서(106x18px) 알약 가장자리를 눌러도
+ * 아무 일이 없었다.
+ */
+.album-btn {
+  flex: 1;
+  min-height: 48px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.chip {
-  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
   background: var(--tile);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 3px 8px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 14px;
+  margin: 0;
+  cursor: pointer;
 }
 
-.chip button.link { padding: 0 4px; font-size: 13px; }
+.album-btn:active { background: #EFE4D2; }
+.album-btn small { flex: 0 0 auto; color: var(--ink-soft); font-weight: 400; }
+
+.album-undo {
+  flex: 0 0 auto;
+  min-height: 48px;
+  background: var(--tile);
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 14px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.album-undo:active { background: #F7E3DE; }
 
 /* 링크로 넣을 곡 미리보기 */
 .plan { list-style: none; margin: 10px 0; padding: 0; font-size: 13px; }
