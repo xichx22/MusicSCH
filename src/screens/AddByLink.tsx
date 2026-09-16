@@ -3,6 +3,7 @@ import { comboKey, newId, type DB } from '../library/store'
 import { mentions } from '../library/match'
 import { getLinkTracks, parseLink, type BulkTrack } from '../sources/spotify'
 import { RECOMMENDED_ALBUMS, albumUrl } from '../library/albums'
+import { autoAssignTopics, autoSummary } from '../library/autotopic'
 import type { Card, Song } from '../types'
 
 interface Planned {
@@ -27,7 +28,14 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
   const topics = db.cards.filter((c) => c.kind === 'topic' && !c.hidden)
 
   const [characterId, setCharacterId] = useState(characters[0]?.id ?? '')
-  const [fallbackId, setFallbackId] = useState('')
+  /**
+   * 주제를 못 정한 곡을 어떻게 할지.
+   *
+   * 'auto'  제목을 보고 카드까지 만들어 바로 넣는다 (기본)
+   * ''      아무 데도 안 넣고 [목록에서 카드 만들기] 에 모아둔다
+   * 그 외   고른 카드 하나에 전부 넣는다
+   */
+  const [fallbackId, setFallbackId] = useState('auto')
   const [link, setLink] = useState('')
   const [plan, setPlan] = useState<Planned[] | null>(null)
   const [albumId, setAlbumId] = useState<string | null>(null)
@@ -59,10 +67,14 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
     }
     if (hits.length === 0) return null
 
-    // 'Police Car Song' 은 경찰차지 자동차가 아니다. 뭉뚱그린 카드는 양보한다.
-    const specific = hits.filter((h) => !h.card.generic)
-    const pool = specific.length > 0 ? specific : hits
-    return pool.sort((a, b) => b.len - a.len)[0].card
+    /*
+     * 길게 맞은 쪽이 이긴다. '자동차 가족' 은 '가족'(2) 보다 '자동차'(3) 다.
+     * 길이가 같으면 뭉뚱그린 카드가 양보한다 — 'Police Car Song' 은
+     * 경찰차지 자동차가 아니다.
+     */
+    return hits.sort(
+      (a, b) => b.len - a.len || Number(!!a.card.generic) - Number(!!b.card.generic),
+    )[0].card
   }
 
   const look = async () => {
@@ -91,7 +103,8 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
 
   const commit = () => {
     if (!plan || !character) return
-    const fallback = topics.find((t) => t.id === fallbackId)
+    const auto = fallbackId === 'auto'
+    const fallback = auto ? undefined : topics.find((t) => t.id === fallbackId)
     const added: Song[] = []
     const keys = new Set<string>()
 
@@ -144,20 +157,31 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
       return
     }
 
-    setDb((d) => {
-      const known = new Set(d.songs.map((s) => `${s.combo ?? s.needsTopic}|${s.ref}`))
-      const fresh = added.filter((s) => !known.has(`${s.combo ?? s.needsTopic}|${s.ref}`))
-      const checks = { ...d.checks }
-      for (const k of keys) checks[k] = { at: Date.now(), count: 1 }
-      return { ...d, songs: [...d.songs, ...fresh], checks }
-    })
+    const known = new Set(db.songs.map((s) => `${s.combo ?? s.needsTopic}|${s.ref}`))
+    const fresh = added.filter((s) => !known.has(`${s.combo ?? s.needsTopic}|${s.ref}`))
+    const checks = { ...db.checks }
+    for (const k of keys) checks[k] = { at: Date.now(), count: 1 }
 
-    const pending = added.filter((s) => s.needsTopic).length
+    let next: DB = { ...db, songs: [...db.songs, ...fresh], checks }
+    const pending = fresh.filter((s) => s.needsTopic).length
+    let summary = ''
+    if (auto && next.songs.some((s) => s.needsTopic)) {
+      // 주제를 못 정한 곡을 제목 보고 카드까지 만들어 바로 넣는다.
+      const r = autoAssignTopics(next)
+      next = r.db
+      summary = autoSummary(r)
+    }
+    setDb(() => next)
+
     setPlan(null)
     setLink('')
     setNote(
-      `${added.length}곡 넣었어.` +
-        (pending ? ` 그중 ${pending}곡은 주제를 못 정해서 아래 [목록에서 카드 만들기] 에 모아뒀어.` : ''),
+      `${fresh.length}곡 넣었어.` +
+        (pending === 0
+          ? ''
+          : auto
+            ? ` 주제를 못 정한 ${pending}곡은 제목을 보고 카드를 만들어 넣었어. ${summary}`
+            : ` 그중 ${pending}곡은 주제를 못 정해서 아래 [목록에서 카드 만들기] 에 모아뒀어.`),
     )
   }
 
@@ -227,6 +251,7 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
           <label>
             주제를 못 정한 곡은 어디에 넣을까
             <select value={fallbackId} onChange={(e) => setFallbackId(e.target.value)}>
+              <option value="auto">알아서 정하기 (제목 보고 카드까지 만듦)</option>
               <option value="">나중에 정하기 (목록에 모아둠)</option>
               {topics
                 .filter((t) => !t.forCharacters || !character || t.forCharacters.includes(character.id))

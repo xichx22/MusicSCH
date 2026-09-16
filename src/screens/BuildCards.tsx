@@ -1,75 +1,15 @@
 import { useMemo, useState } from 'react'
 import { newId, comboKey, type DB } from '../library/store'
-import { mentions } from '../library/match'
+import { autoAssignTopics, autoSummary, guessEmoji, wordsOf } from '../library/autotopic'
 import type { Card } from '../types'
-
-/** 제목에 흔해서 주제가 될 수 없는 말. */
-const STOP = new Set([
-  '노래', '동요', '송', '버전', 'ver', 'version', 'korean', 'inst', 'remix',
-  '함께', '우리', '나는', '너는', '같이', '신나는', '즐거운', '재미있는',
-  '메들리', '모음', '베스트', '인기', '연속', '듣기', '플레이', 'the', 'and', 'song', 'songs',
-])
 
 /** 카드 색을 돌아가며 쓴다. */
 const COLORS = ['#FBDCD4', '#D7E3F7', '#FBE0E8', '#FAE8C6', '#CFEADD', '#EFE0C8', '#DED9F3', '#D8EFF3']
-
-/** 한 캐릭터에 카드가 이보다 많아지면 아이가 못 고른다. */
-const MAX_TOPICS = 18
-
-/** 말에서 그림을 짐작한다. 못 찾으면 음표를 쓴다. */
-const EMOJI_HINTS: [string, string][] = [
-  ['공룡', '🦕'], ['상어', '🦈'], ['코끼리', '🐘'], ['토끼', '🐰'], ['곰', '🐻'], ['강아지', '🐶'],
-  ['고양이', '🐱'], ['돼지', '🐷'], ['오리', '🦆'], ['나비', '🦋'], ['개구리', '🐸'], ['펭귄', '🐧'],
-  ['소방', '🚒'], ['경찰', '🚓'], ['구급', '🚑'], ['트럭', '🚛'], ['버스', '🚌'], ['기차', '🚂'],
-  ['비행기', '✈️'], ['배', '🚢'], ['자전거', '🚲'], ['자동차', '🚗'], ['포크레인', '⛏️'], ['중장비', '🚧'],
-  ['목욕', '🛁'], ['양치', '🪥'], ['잠', '🌙'], ['자장', '🌙'], ['생일', '🎂'], ['밥', '🍚'],
-  ['과일', '🍎'], ['숫자', '🔢'], ['색깔', '🎨'], ['별', '⭐'], ['달', '🌙'], ['해', '☀️'],
-  ['비', '🌧️'], ['눈', '❄️'], ['꽃', '🌸'], ['바다', '🌊'], ['숨바꼭질', '🙈'], ['놀이', '🎠'],
-  ['가족', '👨‍👩‍👧'], ['엄마', '👩'], ['아빠', '👨'], ['아기', '👶'], ['인사', '👋'], ['크리스마스', '🎄'],
-]
-
-function guessEmoji(word: string): string {
-  for (const [key, emoji] of EMOJI_HINTS) if (word.includes(key)) return emoji
-  return '🎵'
-}
 
 interface Candidate {
   word: string
   count: number
   songIds: string[]
-}
-
-/** 제목에서 쓸 만한 말을 뽑는다. 가수 이름과 흔한 말은 뺀다. */
-function wordsOf(title: string, characterWord: string): string[] {
-  return [
-    ...new Set(
-      title
-        .split(' - ')[0]
-        .split(/[\s!?,.·()[\]{}~"'’“”\-–—:;/0-9]+/)
-        .map((w) => w.trim())
-        .filter((w) => w.length >= 2 && !STOP.has(w.toLowerCase()))
-        .filter((w) => !mentions(characterWord, w) && !mentions(w, characterWord)),
-    ),
-  ]
-}
-
-/** 이 곡들에서 카드로 만들기 가장 좋은 말. */
-function pickBest(
-  songs: { id: string; title: string }[],
-  characterWord: string,
-  cards: Card[],
-): Candidate | null {
-  const counter = new Map<string, string[]>()
-  for (const song of songs) {
-    for (const w of wordsOf(song.title, characterWord)) {
-      counter.set(w, [...(counter.get(w) ?? []), song.id])
-    }
-  }
-  const list = [...counter.entries()]
-    .map(([word, songIds]) => ({ word, count: songIds.length, songIds }))
-    .filter((c) => !cards.some((t) => t.kind === 'topic' && t.word === c.word))
-    .sort((a, b) => b.count - a.count || b.word.length - a.word.length)
-  return list[0] ?? null
 }
 
 /**
@@ -96,17 +36,9 @@ export function BuildCards({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
 
       const counter = new Map<string, string[]>()
       for (const song of mine) {
-        // 제목만 본다. 가수 이름은 어느 곡에나 들어 있어서 뽑을 말이 못 된다.
-        const title = song.title.split(' - ')[0]
-        const words = new Set(
-          title
-            .split(/[\s!?,.·()[\]{}~"'’“”\-–—:;/]+/)
-            .map((w) => w.trim())
-            .filter((w) => w.length >= 2 && !STOP.has(w.toLowerCase()))
-            // 캐릭터 이름 자체는 주제가 못 된다
-            .filter((w) => !mentions(character.word, w) && !mentions(w, character.word)),
-        )
-        for (const w of words) counter.set(w, [...(counter.get(w) ?? []), song.id])
+        for (const w of wordsOf(song.title, character.word)) {
+          counter.set(w, [...(counter.get(w) ?? []), song.id])
+        }
       }
 
       const list = [...counter.entries()]
@@ -161,92 +93,11 @@ export function BuildCards({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
    * 2. 그러고도 남은 곡은 제목에서 고른 말로 한 곡짜리 카드를 만든다
    * 3. 카드가 너무 많아지면(아이가 못 고른다) 나머지는 '그 밖의 노래' 로 모은다
    */
+  /** 남은 곡을 전부 알아서 정한다. */
   const autoAssign = () => {
-    setDb((d) => {
-      const cards = [...d.cards]
-      const songs = [...d.songs]
-      const checks = { ...d.checks }
-      let made = 0
-      let single = 0
-      let rest = 0
-
-      const addCard = (characterId: string, word: string): string => {
-        const id = `t-made-${newId()}`
-        cards.push({
-          id,
-          kind: 'topic',
-          word,
-          emoji: guessEmoji(word),
-          color: COLORS[cards.length % COLORS.length],
-          forCharacters: [characterId],
-        })
-        return id
-      }
-
-      const attach = (songIds: Set<string>, characterId: string, topicId: string, word: string) => {
-        const key = comboKey(characterId, topicId)
-        const character = cards.find((c) => c.id === characterId)!
-        let n = 0
-        for (let i = 0; i < songs.length; i += 1) {
-          if (!songIds.has(songs[i].id)) continue
-          songs[i] = {
-            ...songs[i],
-            combo: key,
-            needsTopic: undefined,
-            tags: [character.word, word],
-          }
-          n += 1
-        }
-        checks[key] = { at: Date.now(), count: n }
-      }
-
-      for (const character of cards.filter((c) => c.kind === 'character')) {
-        let mine = songs.filter((s) => s.needsTopic === character.id)
-        if (mine.length === 0) continue
-
-        // 씨앗 카드는 이 캐릭터에 '보일 수 있는' 것뿐이라 세면 안 된다.
-        // 실제로 이 캐릭터의 노래가 붙어 있는 카드만 센다.
-        const topicCount = () =>
-          cards.filter(
-            (c) =>
-              c.kind === 'topic' &&
-              songs.some((s) => s.combo === comboKey(character.id, c.id)),
-          ).length
-
-        // 1. 여러 곡에 겹치는 말부터
-        for (;;) {
-          const best = pickBest(mine, character.word, cards)
-          if (!best || best.count < 2 || topicCount() >= MAX_TOPICS) break
-          attach(new Set(best.songIds), character.id, addCard(character.id, best.word), best.word)
-          made += 1
-          mine = songs.filter((s) => s.needsTopic === character.id)
-        }
-
-        // 2. 한 곡짜리도 제목에서 이름을 지어 카드를 만든다
-        while (mine.length > 0 && topicCount() < MAX_TOPICS) {
-          const song = mine[0]
-          const best = pickBest([song], character.word, cards)
-          const word = best?.word ?? song.title.split(' - ')[0].slice(0, 10)
-          attach(new Set([song.id]), character.id, addCard(character.id, word), word)
-          single += 1
-          mine = songs.filter((s) => s.needsTopic === character.id)
-        }
-
-        // 3. 그래도 남으면 한 카드에 모은다
-        if (mine.length > 0) {
-          const word = '그 밖의 노래'
-          attach(new Set(mine.map((s) => s.id)), character.id, addCard(character.id, word), word)
-          rest += mine.length
-        }
-      }
-
-      setNote(
-        `카드 ${made}개를 만들어 여러 곡을 묶고, ${single}곡은 한 곡짜리 카드로 넣었어.` +
-          (rest ? ` 카드가 너무 많아져서 ${rest}곡은 '그 밖의 노래' 로 모았어.` : '') +
-          ' 그림과 이름은 아래에서 고칠 수 있어.',
-      )
-      return { ...d, cards, songs, checks }
-    })
+    const r = autoAssignTopics(db)
+    setDb(() => r.db)
+    setNote(autoSummary(r))
   }
 
   /** 남은 곡 하나를 이미 있는 카드에 붙인다. */
