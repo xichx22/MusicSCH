@@ -1,4 +1,5 @@
 import type { MusicSource, SearchResult } from './types'
+import { matchesAll } from '../library/match'
 
 /**
  * 로컬 mp3 소스 (A안).
@@ -65,20 +66,16 @@ export const localSource: MusicSource = {
     return 'public/songs/ 폴더에 mp3 를 넣고 manifest.json 에 적어줘.'
   },
 
-  /** 로컬 검색 = manifest 의 제목/태그에 검색어의 낱말이 들어있는지 보기. */
+  /**
+   * 로컬 검색 = manifest 의 제목/태그에 낱말이 전부 들어 있는지 보기.
+   * 하나만 맞아도 통과시키면 엉뚱한 카드에 노래가 딸려 나온다.
+   */
   async search(query: string): Promise<SearchResult[]> {
     const words = query.split(/\s+/).filter(Boolean)
     const m = await loadManifest()
     return m
-      .map((entry) => {
-        const hay = [entry.title, ...entry.tags].join(' ')
-        const hits = words.filter((w) => hay.includes(w)).length
-        return { entry, hits }
-      })
-      .filter((x) => x.hits > 0)
-      // 낱말이 많이 맞을수록 위로
-      .sort((a, b) => b.hits - a.hits)
-      .map(({ entry }) => ({
+      .filter((entry) => matchesAll([entry.title, ...entry.tags].join(' '), words))
+      .map((entry) => ({
         ref: localRef(entry.file),
         title: entry.title,
         durationSec: entry.durationSec,

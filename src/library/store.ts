@@ -1,5 +1,6 @@
 import type { Card, ComboCheck, Settings, Song, UsageToday } from '../types'
 import { DEFAULT_SETTINGS, SEED_CARDS } from './seed'
+import { matchesAll } from './match'
 
 const KEY = 'musicsch.v1'
 
@@ -112,18 +113,15 @@ export type { DB }
 
 /**
  * A안 조회: 카드 조합에 맞는, 아빠가 승인한 곡 찾기.
- * 낱말이 많이 맞을수록 먼저, 같으면 많이 들은 순서.
+ *
+ * 낱말이 **전부** 맞아야 한다. 전에는 하나만 맞아도 통과시켰는데,
+ * 그러면 '뽀로로 소방차' 노래가 '뽀로로 자동차' 카드에도 나온다.
+ * 많이 들은 노래를 먼저 보여준다.
  */
 export function findApproved(songs: Song[], words: string[]): Song[] {
   return songs
-    .filter((s) => s.approved)
-    .map((s) => {
-      const hay = [s.title, ...s.tags].join(' ')
-      return { s, hits: words.filter((w) => hay.includes(w)).length }
-    })
-    .filter((x) => x.hits > 0)
-    .sort((a, b) => b.hits - a.hits || b.s.playCount - a.s.playCount)
-    .map((x) => x.s)
+    .filter((s) => s.approved && matchesAll([s.title, ...s.tags].join(' '), words))
+    .sort((a, b) => b.playCount - a.playCount)
 }
 
 export function comboKey(characterId: string, topicId: string): string {

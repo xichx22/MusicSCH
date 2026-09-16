@@ -1,5 +1,6 @@
 import type { MusicSource, SearchResult } from '../types'
 import { log } from '../../library/diag'
+import { matchesAll } from '../../library/match'
 import { api, getClientId, isLoggedIn } from './auth'
 import {
   activateForMobile,
@@ -51,18 +52,6 @@ const SEARCH_LIMIT = 10
 const ART_MAX_WIDTH = 400
 
 let volume = 0.7
-
-/**
- * 낱말이 제목·가수·앨범 어디엔가 들어 있는가.
- *
- * 한 글자짜리는 아무 데나 들어맞는다. '배' 가 '배드카' 에 걸리는 식이다.
- * 그래서 한 글자는 앞뒤가 한글이 아닐 때만 인정한다.
- */
-function mentions(hay: string, word: string): boolean {
-  if (word.length >= 2) return hay.includes(word)
-  const safe = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return new RegExp(`(^|[^가-힣])${safe}([^가-힣]|$)`).test(hay)
-}
 
 /** 스포티파이는 큰 것부터 준다. 카드에 알맞은 크기를 고른다. */
 function pickImage(images: SpotifyImage[]): string | undefined {
@@ -320,7 +309,7 @@ export const spotifySource: MusicSource = {
       if (t.explicit) return false
 
       const hay = [t.name, t.album.name, ...t.artists.map((a) => a.name)].join(' ')
-      if (!words.every((w) => mentions(hay, w))) {
+      if (!matchesAll(hay, words)) {
         offTopic += 1
         return false
       }
