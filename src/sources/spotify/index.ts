@@ -251,7 +251,13 @@ interface AlbumBrief {
 
 export interface BulkTrack {
   ref: string
+  /** 화면에 보여줄 이름 (가수까지 붙은 것) */
   name: string
+  /**
+   * 곡 제목만. 주제를 정할 때는 이걸 본다.
+   * 가수까지 넣고 보면 'Tayo the Little Bus' 의 Bus 때문에 버스 노래가 된다.
+   */
+  trackName: string
   durationSec?: number
   image?: string
 }
@@ -266,7 +272,13 @@ export async function getLinkTracks(link: SpotifyLink): Promise<BulkTrack[]> {
   if (link.kind === 'track') {
     const info = await getTrack(link.id)
     if (!info) return []
-    return [{ ref: `spotify:track:${link.id}`, name: info.title, durationSec: info.durationSec, image: info.image }]
+    return [{
+      ref: `spotify:track:${link.id}`,
+      name: info.title,
+      trackName: info.title.split(' - ')[0],
+      durationSec: info.durationSec,
+      image: info.image,
+    }]
   }
 
   if (link.kind === 'album') {
@@ -281,6 +293,7 @@ export async function getLinkTracks(link: SpotifyLink): Promise<BulkTrack[]> {
       .map((t) => ({
         ref: t.uri,
         name: `${t.name} - ${t.artists.map((a) => a.name).join(', ')}`,
+        trackName: t.name,
         durationSec: Math.round(t.duration_ms / 1000),
         image: cover,
       }))
@@ -296,6 +309,7 @@ export async function getLinkTracks(link: SpotifyLink): Promise<BulkTrack[]> {
     .map((t) => ({
       ref: t.uri,
       name: `${t.name} - ${t.artists.map((a) => a.name).join(', ')}`,
+      trackName: t.name,
       durationSec: Math.round(t.duration_ms / 1000),
       image: pickImage(t.album?.images ?? []),
     }))

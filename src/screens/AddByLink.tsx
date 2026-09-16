@@ -36,13 +36,33 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
 
   const character = characters.find((c) => c.id === characterId)
 
-  /** 이 캐릭터에서 쓸 수 있는 주제 중, 곡 제목에 이름이 든 것. 긴 낱말이 이긴다. */
+  /**
+   * 이 캐릭터에서 쓸 수 있는 주제 중, 곡 제목에 이름이 든 것.
+   *
+   * 앨범을 가져오면 곡 제목이 영어인 경우가 많다('Fire Truck Song').
+   * 그래서 한글 낱말과 영어 낱말을 둘 다 본다. 여러 개가 걸리면 길게
+   * 맞은 쪽이 이긴다 ('덤프트럭' 이 '트럭' 보다 구체적이다).
+   */
   const guessTopic = (trackName: string, forCharacter: Card): Card | null => {
-    const usable = topics.filter((t) => !t.forCharacters || t.forCharacters.includes(forCharacter.id))
-    const hit = usable
-      .filter((t) => mentions(trackName, t.word))
-      .sort((a, b) => b.word.length - a.word.length)
-    return hit[0] ?? null
+    const lower = trackName.toLowerCase()
+    const hits: { card: Card; len: number }[] = []
+
+    for (const t of topics) {
+      if (t.forCharacters && !t.forCharacters.includes(forCharacter.id)) continue
+
+      let len = 0
+      if (mentions(trackName, t.word)) len = t.word.length
+      for (const alt of t.alsoMatch ?? []) {
+        if (lower.includes(alt.toLowerCase())) len = Math.max(len, alt.length)
+      }
+      if (len > 0) hits.push({ card: t, len })
+    }
+    if (hits.length === 0) return null
+
+    // 'Police Car Song' 은 경찰차지 자동차가 아니다. 뭉뚱그린 카드는 양보한다.
+    const specific = hits.filter((h) => !h.card.generic)
+    const pool = specific.length > 0 ? specific : hits
+    return pool.sort((a, b) => b.len - a.len)[0].card
   }
 
   const look = async () => {
@@ -59,8 +79,8 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
       if (tracks.length === 0) {
         setNote('곡을 못 가져왔어. 링크가 맞는지, 할당량이 남았는지 봐줘.')
       } else {
-        setPlan(tracks.map((track) => ({ track, topic: guessTopic(track.name, character) })))
-        const matched = tracks.filter((t) => guessTopic(t.name, character)).length
+        setPlan(tracks.map((track) => ({ track, topic: guessTopic(track.trackName, character) })))
+        const matched = tracks.filter((t) => guessTopic(t.trackName, character)).length
         setNote(`${tracks.length}곡을 찾았어. 그중 ${matched}곡은 주제까지 알아서 정했어.`)
       }
     } catch (e) {
@@ -246,7 +266,10 @@ function Recommended({
               return (
                 <div key={a.id} className="album-row">
                   <button className="album-btn" onClick={() => onPick(a)}>
-                    <span>{a.title}</span>
+                    <span className="album-name">
+                      {a.title}
+                      {a.note && <em>{a.note}</em>}
+                    </span>
                     {n > 0 && <small>{n}곡 넣음</small>}
                   </button>
                   {n > 0 && (

@@ -598,6 +598,8 @@ body {
 
 .album-btn:active { background: #EFE4D2; }
 .album-btn small { flex: 0 0 auto; color: var(--ink-soft); font-weight: 400; }
+.album-name { display: flex; flex-direction: column; min-width: 0; }
+.album-name em { font-style: normal; font-size: 12px; font-weight: 400; color: var(--ink-soft); }
 
 .album-undo {
   flex: 0 0 auto;
