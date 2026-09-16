@@ -91,11 +91,14 @@ export function SpotifyPanel() {
                 }}
               >
                 <option value="">고르기</option>
-                {devices.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name} ({d.type})
-                  </option>
-                ))}
+                {/* id 가 없는 기기에는 재생을 보낼 수 없어서 목록에서 뺀다. */}
+                {devices
+                  .filter((d): d is SpotifyDevice & { id: string } => Boolean(d.id))
+                  .map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} ({d.type}){d.is_active ? ' · 켜져 있음' : ''}
+                    </option>
+                  ))}
               </select>
             </label>
           )}

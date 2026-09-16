@@ -6,11 +6,15 @@ import {
   ensureSdkPlayer,
   getMode,
   getPreferredDeviceId,
+  listDevices,
   onTrackEnd,
   pauseSdk,
+  resetSdkPlayer,
+  setPreferredDeviceId,
   setSdkVolume,
   startDevicePolling,
   stopDevicePolling,
+  transferTo,
 } from './player'
 
 /**
@@ -44,6 +48,77 @@ async function resolveDeviceId(): Promise<string> {
   const preferred = getPreferredDeviceId()
   if (preferred) return preferred
   throw new Error('아빠 화면에서 재생할 기기를 먼저 골라줘')
+}
+
+async function startOn(deviceId: string, ref: string): Promise<void> {
+  await api(`/me/player/play?device_id=${encodeURIComponent(deviceId)}`, {
+    method: 'PUT',
+    body: JSON.stringify({ uris: [ref] }),
+  })
+}
+
+function isDeviceNotFound(e: unknown): boolean {
+  return e instanceof Error && e.message.includes('404')
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms))
+}
+
+/**
+ * 재생할 기기를 되살린다.
+ *  1. 그 기기로 재생을 넘겨본다 (등록 직후엔 이걸로 깨어난다)
+ *  2. 그래도 목록에 없으면, 켜져 있는 다른 기기로 보낸다
+ */
+async function recoverDevice(deviceId: string): Promise<string> {
+  try {
+    await transferTo(deviceId)
+    await wait(600)
+    const devices = await listDevices()
+    if (devices.some((d) => d.id === deviceId)) {
+      log('기기 되살림', true, '재생을 넘겨서 깨웠어')
+      return deviceId
+    }
+  } catch {
+    /* 넘기기가 실패하면 다음 수단으로 */
+  }
+
+  // 브라우저 스피커가 통째로 죽었으면 한 번 다시 만들어 본다.
+  if (getMode() === 'sdk') {
+    resetSdkPlayer()
+    try {
+      const fresh = await ensureSdkPlayer()
+      await activateForMobile()
+      await transferTo(fresh)
+      await wait(600)
+      log('브라우저 스피커 다시 만듦', true, fresh.slice(0, 8) + '...')
+      return fresh
+    } catch {
+      /* 이 브라우저로는 소리를 못 낸다. 다른 기기를 찾아본다 */
+    }
+  }
+
+  const devices = await listDevices()
+  const usable = devices.filter((d): d is typeof d & { id: string } => Boolean(d.id) && d.id !== deviceId)
+  const chosen = usable.find((d) => d.is_active) ?? usable[0]
+
+  log(
+    '다른 기기 찾기',
+    Boolean(chosen),
+    devices.length
+      ? `보이는 기기: ${devices.map((d) => `${d.name}${d.is_active ? '(켜짐)' : ''}`).join(', ')}`
+      : '켜져 있는 스포티파이 기기가 하나도 없어',
+  )
+
+  if (!chosen) {
+    throw new Error(
+      '소리 낼 기기가 없어. 폰이나 태블릿에서 스포티파이 앱을 열고 아무 노래나 잠깐 틀었다 멈춘 다음 다시 눌러줘',
+    )
+  }
+
+  // 다음부터는 이 기기를 먼저 쓴다.
+  setPreferredDeviceId(chosen.id)
+  return chosen.id
 }
 
 export const spotifySource: MusicSource = {
@@ -94,13 +169,18 @@ export const spotifySource: MusicSource = {
   },
 
   async play(ref, onEnded) {
-    const deviceId = await resolveDeviceId()
-
     onTrackEnd(onEnded)
-    await api(`/me/player/play?device_id=${encodeURIComponent(deviceId)}`, {
-      method: 'PUT',
-      body: JSON.stringify({ uris: [ref] }),
-    })
+
+    let deviceId = await resolveDeviceId()
+    try {
+      await startOn(deviceId, ref)
+    } catch (e) {
+      if (!isDeviceNotFound(e)) throw e
+      // 스포티파이가 기기를 못 찾는다. 브라우저를 스피커로 막 등록했을 때,
+      // 또는 저장해둔 기기가 꺼졌을 때 그렇다. 깨워보고, 안 되면 다른 기기로 간다.
+      deviceId = await recoverDevice(deviceId)
+      await startOn(deviceId, ref)
+    }
 
     if (getMode() === 'sdk') {
       stopDevicePolling()

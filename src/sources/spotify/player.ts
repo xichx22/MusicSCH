@@ -12,7 +12,8 @@ const LS_DEVICE = 'musicsch.spotify.deviceId'
 const SDK_SRC = 'https://sdk.scdn.co/spotify-player.js'
 
 export interface SpotifyDevice {
-  id: string
+  /** 일부 기기는 id 가 없다. 그런 기기에는 재생을 보낼 수 없다. */
+  id: string | null
   name: string
   type: string
   is_active: boolean
@@ -37,6 +38,18 @@ export function setPreferredDeviceId(id: string): void {
 export async function listDevices(): Promise<SpotifyDevice[]> {
   const res = await api<{ devices: SpotifyDevice[] }>('/me/player/devices')
   return res?.devices ?? []
+}
+
+/**
+ * 재생을 이 기기로 넘긴다.
+ * 브라우저가 스피커로 막 등록됐을 때 스포티파이 쪽에서 아직 못 알아보는
+ * 경우가 있는데, 한 번 넘겨주면 깨어난다.
+ */
+export async function transferTo(deviceId: string): Promise<void> {
+  await api('/me/player', {
+    method: 'PUT',
+    body: JSON.stringify({ device_ids: [deviceId], play: false }),
+  })
 }
 
 /* ---------- Web Playback SDK ---------- */
@@ -70,6 +83,22 @@ let deviceIdPromise: Promise<string> | null = null
 let activated = false
 let endCallback: (() => void) | null = null
 let lastState: { paused: boolean; trackId: string | null } | null = null
+
+/**
+ * 만들어둔 SDK 플레이어를 버린다.
+ * 기기가 사라졌을 때 다시 만들어 보려고 쓴다.
+ */
+export function resetSdkPlayer(): void {
+  try {
+    player?.disconnect()
+  } catch {
+    /* 이미 끊겨 있으면 무시 */
+  }
+  player = null
+  deviceIdPromise = null
+  activated = false
+  lastState = null
+}
 
 /** 곡이 끝났을 때 부를 함수를 등록한다. */
 export function onTrackEnd(cb: (() => void) | null): void {
