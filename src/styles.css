@@ -369,6 +369,34 @@ body {
   border-bottom: 1px solid #23262f;
 }
 
+/* 캐릭터 그림 관리 */
+.art { list-style: none; margin: 8px 0 0; padding: 0; }
+
+.art li {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #23262f;
+}
+
+.art-thumb {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  overflow: hidden;
+}
+
+.art-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.art-fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.art-fields small { color: var(--muted); }
+.art-fields small.warn { color: #ffcf7a; }
+.art-fields input { max-width: none; font-size: 13px; padding: 6px; }
+
 .combo { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; }
 
 .combo li {

@@ -24,6 +24,16 @@ import {
  * Premium 계정이어야 API 로 재생할 수 있다.
  */
 
+interface SpotifyImage {
+  url: string
+  width: number | null
+}
+
+interface SpotifyArtist {
+  name: string
+  images: SpotifyImage[]
+}
+
 interface SpotifyTrack {
   uri: string
   name: string
@@ -36,7 +46,51 @@ interface SpotifyTrack {
 /** 스포티파이 검색이 허용하는 최대값 (2026년 2월부터 10). */
 const SEARCH_LIMIT = 10
 
+/** 카드에 쓸 사진 크기. 너무 크면 느리고 너무 작으면 흐리다. */
+const ART_MAX_WIDTH = 400
+
 let volume = 0.7
+
+/** 스포티파이는 큰 것부터 준다. 카드에 알맞은 크기를 고른다. */
+function pickImage(images: SpotifyImage[]): string | undefined {
+  if (images.length === 0) return undefined
+  const fit = images.filter((i) => (i.width ?? 0) <= ART_MAX_WIDTH)
+  return (fit[0] ?? images[images.length - 1]).url
+}
+
+export interface ArtistArt {
+  /** 스포티파이에서 찾은 아티스트 이름. 엉뚱한 걸 물어왔는지 아빠가 확인하라고 준다. */
+  name: string
+  image?: string
+}
+
+/**
+ * 캐릭터 카드에 쓸 공식 아티스트 사진을 찾는다.
+ *
+ * 이모지로는 30개월이 '뽀로로' 를 못 알아본다. 공식 그림을 내려받아
+ * 저장소에 넣으면 저작권 문제가 되니, 스포티파이가 API 로 주는 사진을
+ * 그대로 쓴다.
+ */
+export async function findArtistArt(name: string): Promise<ArtistArt | null> {
+  const params = new URLSearchParams({
+    q: name,
+    type: 'artist',
+    market: 'KR',
+    limit: String(SEARCH_LIMIT),
+  })
+  const res = await api<{ artists: { items: SpotifyArtist[] } }>(`/search?${params}`)
+  const items = res?.artists?.items ?? []
+  if (items.length === 0) return null
+
+  // 이름이 똑같은 것 > 이름에 들어 있는 것 > 맨 앞
+  const wanted = name.trim().toLowerCase()
+  const chosen =
+    items.find((a) => a.name.trim().toLowerCase() === wanted) ??
+    items.find((a) => a.name.toLowerCase().includes(wanted)) ??
+    items[0]
+
+  return { name: chosen.name, image: pickImage(chosen.images ?? []) }
+}
 
 /** 재생할 기기를 정한다. sdk 모드면 이 브라우저, device 모드면 골라둔 기기. */
 async function resolveDeviceId(): Promise<string> {
