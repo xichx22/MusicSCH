@@ -563,6 +563,21 @@ body {
 
 .art-row label.row { margin: 0; }
 
+/* 링크로 넣을 곡 미리보기 */
+.plan { list-style: none; margin: 10px 0; padding: 0; font-size: 13px; }
+
+.plan li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.plan-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plan-topic { flex: 0 0 auto; color: var(--ink-soft); }
+.plan li.bad .plan-topic { color: #A8562F; }
+
 /* 조합 점검 결과 */
 .combo { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; }
 

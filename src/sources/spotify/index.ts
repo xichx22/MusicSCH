@@ -202,6 +202,22 @@ export function parseTrackId(input: string): string | null {
   return null
 }
 
+/** 어떤 종류의 링크인지. */
+export type SpotifyLink =
+  | { kind: 'track'; id: string }
+  | { kind: 'album'; id: string }
+  | { kind: 'playlist'; id: string }
+
+export function parseLink(input: string): SpotifyLink | null {
+  const v = input.trim()
+  const uri = v.match(/^spotify:(track|album|playlist):([A-Za-z0-9]+)/)
+  if (uri) return { kind: uri[1] as SpotifyLink['kind'], id: uri[2] }
+  const url = v.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|album|playlist)\/([A-Za-z0-9]+)/)
+  if (url) return { kind: url[1] as SpotifyLink['kind'], id: url[2] }
+  if (/^[A-Za-z0-9]{22}$/.test(v)) return { kind: 'track', id: v }
+  return null
+}
+
 export interface TrackInfo {
   title: string
   image?: string
@@ -226,6 +242,63 @@ export async function getTrack(id: string): Promise<TrackInfo | null> {
   } catch {
     return null
   }
+}
+
+interface AlbumBrief {
+  name: string
+  images: SpotifyImage[]
+}
+
+export interface BulkTrack {
+  ref: string
+  name: string
+  durationSec?: number
+  image?: string
+}
+
+/**
+ * 앨범이나 재생목록에 든 곡을 한꺼번에 가져온다.
+ *
+ * 곡 하나씩 링크를 복사해 붙여넣는 건 손이 너무 많이 간다. 앨범 링크
+ * 하나면 열댓 곡이 한 번에 들어온다. 검색을 안 쓰니 할당량도 아낀다.
+ */
+export async function getLinkTracks(link: SpotifyLink): Promise<BulkTrack[]> {
+  if (link.kind === 'track') {
+    const info = await getTrack(link.id)
+    if (!info) return []
+    return [{ ref: `spotify:track:${link.id}`, name: info.title, durationSec: info.durationSec, image: info.image }]
+  }
+
+  if (link.kind === 'album') {
+    // 앨범 표지는 앨범 쪽에만 있다. 수록곡에는 안 들어 있다.
+    const album = await api<AlbumBrief>(`/albums/${encodeURIComponent(link.id)}?market=KR`)
+    const cover = pickImage(album?.images ?? [])
+    const res = await api<{ items: SpotifyTrack[] }>(
+      `/albums/${encodeURIComponent(link.id)}/tracks?market=KR&limit=50`,
+    )
+    return (res?.items ?? [])
+      .filter((t) => !t.explicit)
+      .map((t) => ({
+        ref: t.uri,
+        name: `${t.name} - ${t.artists.map((a) => a.name).join(', ')}`,
+        durationSec: Math.round(t.duration_ms / 1000),
+        image: cover,
+      }))
+  }
+
+  // 재생목록은 2026년 2월부터 /tracks 가 아니라 /items 다.
+  const res = await api<{ items: { track: SpotifyTrack | null }[] }>(
+    `/playlists/${encodeURIComponent(link.id)}/items?market=KR&limit=50`,
+  )
+  return (res?.items ?? [])
+    .map((i) => i.track)
+    .filter((t): t is SpotifyTrack => Boolean(t) && !t!.explicit)
+    .map((t) => ({
+      ref: t.uri,
+      name: `${t.name} - ${t.artists.map((a) => a.name).join(', ')}`,
+      durationSec: Math.round(t.duration_ms / 1000),
+      image: pickImage(t.album?.images ?? []),
+    }))
 }
 
 export interface TopicArt {
