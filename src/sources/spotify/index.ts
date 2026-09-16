@@ -10,6 +10,7 @@ import {
   onTrackEnd,
   pauseSdk,
   resetSdkPlayer,
+  setLastPlay,
   setPreferredDeviceId,
   setSdkVolume,
   startDevicePolling,
@@ -144,7 +145,11 @@ function wait(ms: number): Promise<void> {
  *  1. 그 기기로 재생을 넘겨본다 (등록 직후엔 이걸로 깨어난다)
  *  2. 그래도 목록에 없으면, 켜져 있는 다른 기기로 보낸다
  */
+/** 복구 과정에서 이 브라우저를 포기하고 다른 기기로 넘어갔는지. */
+let fellBackToDevice: { name: string } | null = null
+
 async function recoverDevice(deviceId: string): Promise<string> {
+  fellBackToDevice = null
   try {
     await transferTo(deviceId)
     await wait(600)
@@ -192,6 +197,7 @@ async function recoverDevice(deviceId: string): Promise<string> {
 
   // 다음부터는 이 기기를 먼저 쓴다.
   setPreferredDeviceId(chosen.id)
+  fellBackToDevice = { name: chosen.name }
   return chosen.id
 }
 
@@ -323,7 +329,16 @@ export const spotifySource: MusicSource = {
       await startOn(deviceId, ref)
     }
 
-    if (getMode() === 'sdk') {
+    // 브라우저가 스피커 노릇을 했는지, 다른 기기로 넘어갔는지 남긴다.
+    const onBrowser = getMode() === 'sdk' && !fellBackToDevice
+    setLastPlay({
+      how: onBrowser ? 'browser' : 'device',
+      deviceName: fellBackToDevice?.name ?? (onBrowser ? '이 브라우저' : '골라둔 기기'),
+      fellBack: getMode() === 'sdk' && fellBackToDevice !== null,
+      at: Date.now(),
+    })
+
+    if (onBrowser) {
       stopDevicePolling()
       await setSdkVolume(volume)
     } else {

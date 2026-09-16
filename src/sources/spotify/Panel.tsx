@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { beginLogin, getClientId, isLoggedIn, logout, redirectUri, setClientId } from './auth'
 import {
+  getLastPlay,
   getMode,
   getPreferredDeviceId,
   listDevices,
@@ -77,6 +78,8 @@ export function SpotifyPanel() {
         </select>
       </label>
 
+      <LastPlayNote mode={mode} />
+
       {mode === 'device' && (
         <>
           <button onClick={() => void refreshDevices()}>기기 목록 새로고침</button>
@@ -107,5 +110,38 @@ export function SpotifyPanel() {
 
       {note && <p className="hint">{note}</p>}
     </section>
+  )
+}
+
+/**
+ * 마지막으로 어디서 소리가 났는지 보여준다.
+ *
+ * '이 태블릿에서 바로 재생' 으로 해뒀는데 폰의 스포티파이 앱이 뜨면
+ * 아빠는 영문을 모른다. 브라우저 스피커가 안 돼서 넘어간 것이다.
+ */
+function LastPlayNote({ mode }: { mode: PlaybackMode }) {
+  const last = getLastPlay()
+  if (!last) return null
+
+  const when = new Date(last.at).toLocaleTimeString('ko-KR', { hour12: false })
+
+  if (last.fellBack) {
+    return (
+      <p className="hint">
+        <strong>마지막 재생({when}): {last.deviceName}</strong>
+        <br />
+        이 브라우저로 소리를 내려다 실패해서 다른 기기로 넘어갔어. 그래서 스포티파이 앱이 뜬 거야.
+        계속 이러면 재생 방식을 <strong>다른 스포티파이 기기에서 재생</strong> 으로 바꿔두는 게 낫다.
+        그게 싫으면 태블릿에서 스포티파이 앱을 완전히 종료하고 다시 눌러봐 — 브라우저가 스피커를
+        잡을 자리가 생긴다.
+      </p>
+    )
+  }
+
+  return (
+    <p className="hint">
+      마지막 재생({when}): <strong>{last.deviceName}</strong>
+      {last.how === 'browser' && mode === 'sdk' && ' — 이 브라우저에서 잘 나오고 있어.'}
+    </p>
   )
 }

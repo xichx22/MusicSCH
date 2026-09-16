@@ -8,6 +8,7 @@ import { api, getAccessToken } from './auth'
 export type PlaybackMode = 'sdk' | 'device'
 
 const LS_MODE = 'musicsch.spotify.mode'
+const LS_LAST = 'musicsch.spotify.lastPlay'
 const LS_DEVICE = 'musicsch.spotify.deviceId'
 const SDK_SRC = 'https://sdk.scdn.co/spotify-player.js'
 
@@ -33,6 +34,39 @@ export function getPreferredDeviceId(): string {
 
 export function setPreferredDeviceId(id: string): void {
   localStorage.setItem(LS_DEVICE, id)
+}
+
+/**
+ * 마지막으로 어디서 소리가 났는지.
+ *
+ * '이 태블릿에서 바로 재생' 으로 해뒀는데도 폰의 스포티파이 앱이 뜨는
+ * 일이 있다. 브라우저 스피커가 안 돼서 복구 로직이 다른 기기로 넘긴
+ * 것인데, 아빠 화면에서는 그걸 알 방법이 없었다.
+ */
+export interface LastPlay {
+  /** browser = 이 브라우저가 스피커, device = 다른 기기로 넘김 */
+  how: 'browser' | 'device'
+  deviceName: string
+  /** 브라우저로 내려다가 실패해서 다른 기기로 넘어갔는가 */
+  fellBack: boolean
+  at: number
+}
+
+export function setLastPlay(v: LastPlay): void {
+  try {
+    localStorage.setItem(LS_LAST, JSON.stringify(v))
+  } catch {
+    /* 기록에 실패해도 재생은 계속돼야 한다 */
+  }
+}
+
+export function getLastPlay(): LastPlay | null {
+  try {
+    const raw = localStorage.getItem(LS_LAST)
+    return raw ? (JSON.parse(raw) as LastPlay) : null
+  } catch {
+    return null
+  }
 }
 
 export async function listDevices(): Promise<SpotifyDevice[]> {
