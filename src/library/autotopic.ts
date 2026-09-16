@@ -1,5 +1,6 @@
 import { newId, comboKey, type DB } from './store'
 import { mentions } from './match'
+import { toKorean } from './english'
 import type { Card } from '../types'
 
 /** 제목에 흔해서 주제가 될 수 없는 말. */
@@ -7,13 +8,37 @@ const STOP = new Set([
   '노래', '동요', '송', '버전', 'ver', 'version', 'korean', 'inst', 'remix',
   '함께', '우리', '나는', '너는', '같이', '신나는', '즐거운', '재미있는',
   '메들리', '모음', '베스트', '인기', '연속', '듣기', '플레이', 'the', 'and', 'song', 'songs',
+  // 영어 제목에서 남는 흔한 말
+  'is', 'are', 'am', 'was', 'were', 'be', 'it', 'its', 'in', 'on', 'at', 'to', 'of',
+  'for', 'with', 'my', 'me', 'we', 'you', 'your', 'our', 'they', 'he', 'she', 'his',
+  'her', 'this', 'that', 'there', 'here', 'up', 'down', 'let', 'lets', 'all', 'oh',
+  'yeah', 'la', 'na', 'feat', 'ft', 'ost', 'mix', 'edit', 'live', 'intro', 'outro',
 ])
+
+export interface Candidate {
+  word: string
+  count: number
+  songIds: string[]
+}
+
+/** 한글 낱말이 영어 찌꺼기보다 카드 이름으로 낫다. */
+function hangul(word: string): number {
+  return /[가-힣]/.test(word) ? 1 : 0
+}
+
+/** 카드 이름으로 더 나은 쪽이 앞에 오게. 많이 나온 말 > 한글 > 긴 말. */
+export function betterWord(a: Candidate, b: Candidate): number {
+  return b.count - a.count || hangul(b.word) - hangul(a.word) || b.word.length - a.word.length
+}
 
 /** 카드 색을 돌아가며 쓴다. */
 const COLORS = ['#FBDCD4', '#D7E3F7', '#FBE0E8', '#FAE8C6', '#CFEADD', '#EFE0C8', '#DED9F3', '#D8EFF3']
 
-/** 한 캐릭터에 카드가 이보다 많아지면 아이가 못 고른다. */
-export const MAX_TOPICS = 18
+/**
+ * 한 캐릭터에 카드가 이보다 많아지면 아이가 못 고른다.
+ * 한 쪽에 6장씩 넘기니 4쪽까지다.
+ */
+export const MAX_TOPICS = 24
 
 /** 말에서 그림을 짐작한다. 못 찾으면 음표를 쓴다. */
 const EMOJI_HINTS: [string, string][] = [
@@ -29,17 +54,16 @@ const EMOJI_HINTS: [string, string][] = [
   ['비', '🌧️'], ['눈', '❄️'], ['꽃', '🌸'], ['바다', '🌊'], ['숨바꼭질', '🙈'], ['놀이', '🎠'],
   ['가족', '👨‍👩‍👧'], ['엄마', '👩'], ['아빠', '👨'], ['아기', '👶'], ['인사', '👋'], ['크리스마스', '🎄'],
   ['청소', '🧹'], ['빨래', '🧺'], ['병원', '🏥'], ['공룡알', '🥚'],
+  ['출발', '🏁'], ['빠른', '🏁'], ['모험', '🗺️'], ['졸린', '😴'], ['힘센', '💪'],
+  ['터널', '🌉'], ['다리', '🌉'], ['주유소', '⛽'], ['사이렌', '🚨'], ['바퀴', '🛞'],
+  ['엔진', '⚙️'], ['수리', '🔧'], ['친구', '🧑‍🤝‍🧑'], ['춤', '💃'], ['달리기', '🏃'],
+  ['도우미', '🦺'], ['일하기', '👷'], ['공원', '🏞️'], ['학교', '🏫'], ['집', '🏠'],
+  ['겨울', '⛄'], ['여름', '🏖️'], ['무지개', '🌈'], ['점프', '🤸'], ['깜짝', '🎉'],
 ]
 
 export function guessEmoji(word: string): string {
   for (const [key, emoji] of EMOJI_HINTS) if (word.includes(key)) return emoji
   return '🎵'
-}
-
-export interface Candidate {
-  word: string
-  count: number
-  songIds: string[]
 }
 
 /**
@@ -57,9 +81,11 @@ function normalize(word: string): string {
 export function wordsOf(title: string, characterWord: string): string[] {
   return [
     ...new Set(
-      title
+      // 영어 제목은 먼저 한글로 바꾼다. 안 그러면 'Excavator' 카드가 생긴다.
+      toKorean(
         // ' - 핑크퐁' 처럼 뒤에 붙은 가수 이름은 어느 곡에나 있어서 뽑을 말이 못 된다
-        .split(' - ')[0]
+        title.split(' - ')[0],
+      )
         .split(/[\s!?,.·()[\]{}~"'’“”\-–—:;/0-9]+/)
         .map((w) => normalize(w.trim()))
         .filter((w) => w.length >= 2 && !STOP.has(w.toLowerCase()))
@@ -83,7 +109,7 @@ export function pickBest(
   const list = [...counter.entries()]
     .map(([word, songIds]) => ({ word, count: songIds.length, songIds }))
     .filter((c) => !cards.some((t) => t.kind === 'topic' && t.word === c.word))
-    .sort((a, b) => b.count - a.count || b.word.length - a.word.length)
+    .sort(betterWord)
   return list[0] ?? null
 }
 
@@ -162,7 +188,7 @@ export function autoAssignTopics(d: DB): AutoResult {
     while (mine.length > 0 && topicCount() < MAX_TOPICS) {
       const song = mine[0]
       const best = pickBest([song], character.word, cards)
-      const word = best?.word ?? song.title.split(' - ')[0].slice(0, 10)
+      const word = best?.word ?? toKorean(song.title.split(' - ')[0]).slice(0, 10)
       attach(new Set([song.id]), character.id, addCard(character.id, word), word)
       single += 1
       mine = songs.filter((s) => s.needsTopic === character.id)

@@ -4,6 +4,7 @@ import { mentions } from '../library/match'
 import { getLinkTracks, parseLink, type BulkTrack } from '../sources/spotify'
 import { RECOMMENDED_ALBUMS, albumUrl } from '../library/albums'
 import { autoAssignTopics, autoSummary } from '../library/autotopic'
+import { toKorean } from '../library/english'
 import type { Card, Song } from '../types'
 
 interface Planned {
@@ -52,14 +53,18 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
    * 맞은 쪽이 이긴다 ('덤프트럭' 이 '트럭' 보다 구체적이다).
    */
   const guessTopic = (trackName: string, forCharacter: Card): Card | null => {
-    const lower = trackName.toLowerCase()
+    // 'Fire Truck Song' 을 '소방차 Song' 으로 바꿔놓고 한글 카드와 맞춰본다.
+    // 별명(alsoMatch)도 바꾸고 남은 글자에서 찾는다. 'Car Wash Song' 은
+    // 이미 '세차' 가 됐으니 'car' 별명이 끼어들어 자동차가 되면 안 된다.
+    const ko = toKorean(trackName)
+    const lower = ko.toLowerCase()
     const hits: { card: Card; len: number }[] = []
 
     for (const t of topics) {
       if (t.forCharacters && !t.forCharacters.includes(forCharacter.id)) continue
 
       let len = 0
-      if (mentions(trackName, t.word)) len = t.word.length
+      if (mentions(ko, t.word)) len = t.word.length
       for (const alt of t.alsoMatch ?? []) {
         if (lower.includes(alt.toLowerCase())) len = Math.max(len, alt.length)
       }

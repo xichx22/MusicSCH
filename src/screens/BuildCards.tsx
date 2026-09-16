@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { newId, comboKey, type DB } from '../library/store'
-import { autoAssignTopics, autoSummary, guessEmoji, wordsOf } from '../library/autotopic'
+import { autoAssignTopics, autoSummary, betterWord, guessEmoji, wordsOf } from '../library/autotopic'
 import type { Card } from '../types'
 
 /** 카드 색을 돌아가며 쓴다. */
@@ -47,7 +47,7 @@ export function BuildCards({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
         .filter((c) => c.count >= 2)
         // 이미 있는 카드는 뺀다
         .filter((c) => !topics.some((t) => t.word === c.word))
-        .sort((a, b) => b.count - a.count || b.word.length - a.word.length)
+        .sort(betterWord)
         .slice(0, 12)
 
       if (list.length > 0) out.set(character.id, list)
