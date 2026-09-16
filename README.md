@@ -106,10 +106,35 @@ npm run build    # 배포용 빌드 -> dist/
 스포티파이 대시보드의 Redirect URI 에 `https://xichx22.github.io/MusicSCH/` 를
 **끝 슬래시까지 그대로** 등록하면 된다.
 
+### 2026년 2월 정책 변경 (중요)
+
+스포티파이가 [개발자 접근을 조였다](https://developer.spotify.com/blog/2026-02-06-update-on-developer-access-and-platform-security).
+개발자 모드는 이제:
+
+- **Premium 계정 필수**
+- 개발자 한 명당 **Client ID 하나**
+- Client ID 하나당 **사용자 5명까지**
+- 쓸 수 있는 API 엔드포인트가 줄었다
+
+**이 앱은 영향 없다.** 쓰는 엔드포인트 여섯 개가 모두
+[계속 지원되는 목록](https://developer.spotify.com/documentation/web-api/references/changes/february-2026)에 남아 있다.
+
+| 엔드포인트 | 쓰는 곳 | 상태 |
+|---|---|---|
+| `/search` | 카드 조합으로 노래 찾기 | 지원 |
+| `/me/player/play` | 재생 | 지원 |
+| `/me/player/pause` | 정지 | 지원 |
+| `/me/player/volume` | 볼륨 | 지원 |
+| `/me/player/devices` | 재생할 기기 목록 | 지원 |
+| `/me/player` | 곡 끝났는지 확인 | 지원 |
+
+없어진 것은 `Get Several ...` 류와 사용자 프로필 계열인데 이 앱은 하나도 안 쓴다.
+
 ### 개발자 모드 제한
 
-새로 만든 앱은 개발자 모드라 [허용 목록에 넣은 계정만](https://developer.spotify.com/documentation/web-api/concepts/quota-modes)
-쓸 수 있다. 가족끼리 쓰는 거라 상관없다. (지금은 개인이 이 제한을 풀 방법이 없다)
+새로 만든 앱은 개발자 모드라 허용 목록(User Management)에 넣은 계정만 쓸 수 있다.
+위 정책 변경으로 **5명까지**다. 가족끼리 쓰는 거라 상관없다.
+개인 개발자가 이 제한을 푸는 방법은 지금 없다.
 
 ### 재생 방식 두 가지
 
