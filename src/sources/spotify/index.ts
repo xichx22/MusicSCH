@@ -80,15 +80,23 @@ export async function findArtistArt(name: string): Promise<ArtistArt | null> {
   })
   const res = await api<{ artists: { items: SpotifyArtist[] } }>(`/search?${params}`)
   const items = res?.artists?.items ?? []
-  if (items.length === 0) return null
 
-  // 이름이 똑같은 것 > 이름에 들어 있는 것 > 맨 앞
-  const wanted = name.trim().toLowerCase()
+  /*
+   * 이름이 맞는 것만 쓴다. 예전에는 아무것도 안 맞으면 첫 결과를 그냥
+   * 썼는데, '아기상어' 를 찾다가 뽀로로 사진이 붙었다. 아이 앱에서
+   * 엉뚱한 사진은 사진이 없는 것보다 나쁘다. 뽀로로인 줄 알고 눌렀는데
+   * 다른 노래가 나오기 때문이다. 못 찾으면 그냥 못 찾았다고 한다.
+   */
+  const norm = (v: string) => v.trim().toLowerCase().replace(/\s+/g, '')
+  const want = norm(name)
   const chosen =
-    items.find((a) => a.name.trim().toLowerCase() === wanted) ??
-    items.find((a) => a.name.toLowerCase().includes(wanted)) ??
-    items[0]
+    items.find((a) => norm(a.name) === want) ??
+    // '타요' -> '꼬마버스 타요'
+    items.find((a) => norm(a.name).includes(want)) ??
+    // 'Twinkle Little Studio' -> '동요 Twinkle Little Studio'
+    items.find((a) => want.includes(norm(a.name)))
 
+  if (!chosen) return null
   return { name: chosen.name, image: pickImage(chosen.images ?? []) }
 }
 

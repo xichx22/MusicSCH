@@ -17,6 +17,8 @@ export function CardArt({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => vo
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
   const [matched, setMatched] = useState<Record<string, string>>({})
+  // 이름이 맞는 아티스트를 못 찾은 카드. 붙어 있는 사진이 남의 것일 수 있다.
+  const [unmatched, setUnmatched] = useState<Record<string, boolean>>({})
 
   const characters = db.cards.filter((c) => c.kind === 'character')
   const topics = db.cards.filter((c) => c.kind === 'topic' && !c.hidden)
@@ -39,19 +41,33 @@ export function CardArt({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => vo
 
     setBusy(true)
     setQuiet(true)
+    // 같은 사진이 두 카드에 붙으면 아이가 구별을 못 한다.
+    const used = new Set(
+      db.cards.filter((c) => c.image && !targets.some((t) => t.id === c.id)).map((c) => c.image!),
+    )
     const images: Record<string, string> = {}
     const names: Record<string, string> = {}
+    const missed: Record<string, boolean> = {}
     let found = 0
+    let dup = 0
 
     for (const card of targets) {
       setNote(`${card.label ?? card.word} 찾는 중...`)
       try {
         const art = await findArtistArt(card.word)
-        if (art) {
+        if (!art) {
+          missed[card.id] = true
+        } else {
           names[card.id] = art.name
+          missed[card.id] = false
           if (art.image) {
-            images[card.id] = art.image
-            found += 1
+            if (used.has(art.image)) {
+              dup += 1
+            } else {
+              used.add(art.image)
+              images[card.id] = art.image
+              found += 1
+            }
           }
         }
       } catch (e) {
@@ -63,12 +79,18 @@ export function CardArt({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => vo
 
     setQuiet(false)
     setMatched((m) => ({ ...m, ...names }))
+    setUnmatched((m) => ({ ...m, ...missed }))
     setDb((d) => ({
       ...d,
       cards: d.cards.map((c) => (images[c.id] ? { ...c, image: images[c.id] } : c)),
     }))
     setBusy(false)
-    setNote(`${targets.length}명 중 ${found}명 사진을 찾았어. 아래에서 맞는지 확인해줘.`)
+    const missCount = Object.values(missed).filter(Boolean).length
+    setNote(
+      `${targets.length}명 중 ${found}명 사진을 찾았어.` +
+        (missCount ? ` ${missCount}명은 이름이 맞는 아티스트가 없어서 그냥 뒀어 (아래 ⚠️).` : '') +
+        (dup ? ` 겹치는 사진 ${dup}개는 안 썼어.` : ''),
+    )
   }
 
   /**
@@ -161,6 +183,9 @@ export function CardArt({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => vo
   const setWord = (id: string, word: string) =>
     setDb((d) => ({ ...d, cards: d.cards.map((c) => (c.id === id ? { ...c, word } : c)) }))
 
+  const setHidden = (id: string, hidden: boolean) =>
+    setDb((d) => ({ ...d, cards: d.cards.map((c) => (c.id === id ? { ...c, hidden } : c)) }))
+
   return (
     <section>
       <h2>캐릭터 그림</h2>
@@ -197,18 +222,46 @@ export function CardArt({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => vo
               {c.image ? <img src={c.image} alt="" /> : <span>{c.emoji}</span>}
             </span>
             <div className="art-fields">
-              <strong>{c.label ?? c.word}</strong>
-              {matched[c.id] && (
-                <small className={matched[c.id] === c.word ? '' : 'warn'}>
-                  스포티파이가 찾은 이름: {matched[c.id]}
+              <strong>
+                {c.label ?? c.word}
+                {c.hidden && <small> · 숨김</small>}
+              </strong>
+              {unmatched[c.id] ? (
+                <small className="warn">
+                  ⚠️ 이름이 맞는 아티스트를 못 찾았어. 지금 붙어 있는 사진은 남의 것일 수 있어 —
+                  검색어를 고치거나 사진을 지워줘.
                 </small>
+              ) : (
+                /*
+                 * 이제는 이름이 맞는 아티스트만 쓰므로, 이름이 조금 달라도
+                 * ('타요' -> '꼬마버스 타요') 정상이다. 주황색으로 칠하면
+                 * 위의 진짜 경고와 구분이 안 된다.
+                 */
+                matched[c.id] && (
+                  <small>스포티파이가 찾은 이름: {matched[c.id]}</small>
+                )
               )}
               <input value={c.word} onChange={(e) => setWord(c.id, e.target.value)} placeholder="검색어" />
               <input
                 value={c.image ?? ''}
                 onChange={(e) => setImage(c.id, e.target.value)}
-                placeholder="사진 주소 (비우면 이모지)"
+                placeholder="사진 주소 (비우면 그린 그림)"
               />
+              <span className="art-row">
+                <label className="row">
+                  <input
+                    type="checkbox"
+                    checked={!c.hidden}
+                    onChange={(e) => setHidden(c.id, !e.target.checked)}
+                  />
+                  지한이에게 보이기
+                </label>
+                {c.image && (
+                  <button className="link" onClick={() => setImage(c.id, '')}>
+                    사진 지우기
+                  </button>
+                )}
+              </span>
             </div>
           </li>
         ))}
