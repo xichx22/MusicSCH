@@ -6,6 +6,7 @@ import { SOURCES, getSource } from '../sources'
 import { loadManifest, localRef } from '../sources/local'
 import { SpotifyPanel } from '../sources/spotify/Panel'
 import { clear as clearDiag, entries as diagEntries } from '../library/diag'
+import { ComboCheck } from './ComboCheck'
 
 interface Props {
   db: DB
@@ -127,6 +128,8 @@ export function Admin({ db, setDb, onClose }: Props) {
       </section>
 
       {db.settings.searchSourceId === 'spotify' && <SpotifyPanel />}
+
+      <ComboCheck db={db} setDb={setDb} />
 
       <Diagnostics />
 

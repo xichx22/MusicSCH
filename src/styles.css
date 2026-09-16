@@ -47,6 +47,9 @@ body {
 
 /* 노래 후보는 2개까지면 한 줄로 크게, 3~4개면 두 줄로. 항상 화면을 꽉 채운다. */
 .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+/* 카드가 7개를 넘으면 3줄로 잡아 한 화면에 다 들어가게 한다. */
+.grid:has(> :nth-child(7)) { grid-template-rows: repeat(3, 1fr); }
 .grid-2:has(> :nth-child(3)) { grid-template-rows: repeat(2, 1fr); }
 
 @media (orientation: portrait) {
@@ -106,6 +109,46 @@ body {
 .chosen-strip .pic-emoji { font-size: 8vmin; }
 .chosen-strip .pic-label { font-size: 2.2vmin; }
 .plus, .question { font-size: 6vmin; color: var(--muted); }
+
+/* ---------- 아래 줄 (뒤로 + 페이지 넘김) ---------- */
+.bottom-row {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  min-height: 11vmin;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 2vmin;
+  margin-left: auto;
+}
+
+.page-btn {
+  background: #272a38;
+  border: none;
+  border-radius: 3vmin;
+  color: #fff;
+  font-size: 5vmin;
+  padding: 1.5vmin 5vmin;
+  cursor: pointer;
+}
+
+.page-btn:active { background: #363a4d; }
+
+.page-dots { display: flex; gap: 1.2vmin; }
+
+.dot {
+  width: 1.6vmin;
+  height: 1.6vmin;
+  border-radius: 50%;
+  background: #3a3f52;
+}
+
+.dot.on { background: #fff; }
 
 /* ---------- 뒤로 ---------- */
 .back {
@@ -325,6 +368,18 @@ body {
   padding: 8px 0;
   border-bottom: 1px solid #23262f;
 }
+
+.combo { list-style: none; margin: 8px 0 0; padding: 0; font-size: 13px; }
+
+.combo li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 0;
+  border-bottom: 1px solid #23262f;
+}
+
+.combo li span { color: var(--muted); word-break: keep-all; }
 
 .diag-time { color: var(--muted); font-variant-numeric: tabular-nums; }
 .diag-what { font-weight: 600; }

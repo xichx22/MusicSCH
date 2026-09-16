@@ -188,6 +188,16 @@ export async function getAccessToken(): Promise<string | null> {
 export class SpotifyAuthError extends Error {}
 
 /**
+ * 너무 자주 불렀을 때. 오류가 아니라 '조금 있다 다시 오라'는 뜻이라
+ * 실패로 치지 말고 기다렸다 다시 해야 한다.
+ */
+export class SpotifyRateLimitError extends Error {
+  constructor(readonly retryAfterSec: number, message: string) {
+    super(message)
+  }
+}
+
+/**
  * 스포티파이 Web API 호출. 204(내용 없음)는 null 을 준다.
  *
  * 실패하면 스포티파이가 보내준 진짜 이유를 그대로 메시지에 담는다.
@@ -227,6 +237,10 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T | 
   if (res.status === 401) throw new SpotifyAuthError(`로그인이 만료됐어. 다시 로그인해줘 (${detail})`)
   if (res.status === 403) throw new Error(`스포티파이가 거절했어 (${detail})`)
   if (res.status === 404) throw new Error(`대상을 못 찾았어 (${detail})`)
-  if (res.status === 429) throw new Error(`스포티파이가 잠깐 쉬래 (${detail})`)
+  if (res.status === 429) {
+    // 스포티파이가 Retry-After 헤더로 몇 초 쉬라고 알려준다.
+    const after = Number(res.headers.get('Retry-After')) || 3
+    throw new SpotifyRateLimitError(after, `스포티파이가 ${after}초 쉬래 (${detail})`)
+  }
   throw new Error(`스포티파이 오류 (${detail})`)
 }

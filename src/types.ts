@@ -5,12 +5,29 @@ export interface Card {
   kind: 'character' | 'topic'
   /** 검색어를 만들 때 붙는 말. 예: '뽀로로' + '소방차' -> '뽀로로 소방차' */
   word: string
+  /**
+   * 카드에 적을 글씨. 없으면 word 를 그대로 쓴다.
+   * 검색어로는 영어 이름이 잘 맞지만 아빠가 보기엔 한글이 나은 경우에 쓴다.
+   */
+  label?: string
   /** 아이에게 보여줄 그림. image가 없으면 이모지를 쓴다. */
   emoji: string
   /** public/ 아래 사진 경로. 넣으면 이모지 대신 사진이 나온다. */
   image?: string
   color: string
   hidden?: boolean
+  /**
+   * 주제 카드만 해당. 어떤 캐릭터에서 보여줄지.
+   * 없으면 모든 캐릭터에서 보여준다.
+   * (포코는 타요에만, 크롱은 뽀로로에만 있으면 된다)
+   */
+  forCharacters?: string[]
+}
+
+/** 조합 점검 결과. 이 조합으로 검색했을 때 노래가 몇 개 나왔는지. */
+export interface ComboCheck {
+  at: number
+  count: number
 }
 
 export interface Song {

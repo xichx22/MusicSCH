@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Card, Song } from './types'
-import { findApproved, load, newId, save, type DB } from './library/store'
+import { comboKey, findApproved, load, newId, save, topicsFor, type DB } from './library/store'
 import { log as logDiag } from './library/diag'
 import { getSource } from './sources'
 import { usePlayer, type NowPlaying } from './hooks/usePlayer'
@@ -63,8 +63,7 @@ export default function App() {
     }
   }, [limitReached, now, stop])
 
-  const characters = useMemo(() => db.cards.filter((c) => c.kind === 'character'), [db.cards])
-  const topics = useMemo(() => db.cards.filter((c) => c.kind === 'topic'), [db.cards])
+  const characters = useMemo(() => db.cards.filter((c) => c.kind === 'character' && !c.hidden), [db.cards])
 
   const goHome = () => {
     stop()
@@ -106,7 +105,13 @@ export default function App() {
 
     setBusy(true)
     try {
-      const results = (await source.search(words.join(' '))).slice(0, MAX_CHOICES)
+      const found = await source.search(words.join(' '))
+      // 이 조합에 노래가 있는지 기억해둔다. 없으면 다음부터 카드를 감춘다.
+      setDb((d) => ({
+        ...d,
+        checks: { ...d.checks, [comboKey(character.id, topic.id)]: { at: Date.now(), count: found.length } },
+      }))
+      const results = found.slice(0, MAX_CHOICES)
       if (results.length === 0) return setStep({ name: 'empty', character })
 
       // 검색으로 찾은 곡은 '확인 전' 상태로 저장해둔다. 아빠가 승인하면 A목록이 된다.
@@ -192,9 +197,9 @@ export default function App() {
     body = (
       <div className="screen">
         <div className="chosen-strip">
-          <PictureButton {...step.character} label={step.character.word} onClick={() => {}} static />
+          <PictureButton {...step.character} label={step.character.label ?? step.character.word} onClick={() => {}} static />
           <span className="plus">＋</span>
-          <PictureButton {...step.topic} label={step.topic.word} onClick={() => {}} static />
+          <PictureButton {...step.topic} label={step.topic.label ?? step.topic.word} onClick={() => {}} static />
         </div>
         <div className="grid grid-2">
           {step.choices.map((c) => (
@@ -208,20 +213,30 @@ export default function App() {
             />
           ))}
         </div>
-        <button className="back" onClick={goHome} aria-label="뒤로">⬅️</button>
+        <div className="bottom-row">
+          <button className="back" onClick={goHome} aria-label="뒤로">⬅️</button>
+        </div>
       </div>
     )
   } else if (step.name === 'topic') {
     body = (
       <PickGrid
-        cards={topics}
+        key={step.character.id}
+        cards={topicsFor(db, step.character.id)}
         chosen={step.character}
         onPick={(topic) => void resolve(step.character, topic)}
         onBack={goHome}
       />
     )
   } else {
-    body = <PickGrid cards={characters} onPick={(character) => setStep({ name: 'topic', character })} />
+    // 캐릭터는 첫 화면이라 넘기지 않고 한 번에 다 보여준다.
+    body = (
+      <PickGrid
+        cards={characters}
+        pageSize={9}
+        onPick={(character) => setStep({ name: 'topic', character })}
+      />
+    )
   }
 
   return (

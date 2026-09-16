@@ -217,4 +217,13 @@ export const spotifySource: MusicSource = {
   },
 }
 
-export { beginLogin, completeLoginFromUrl, isLoggedIn, logout, getClientId, setClientId, redirectUri } from './auth'
+export {
+  beginLogin,
+  completeLoginFromUrl,
+  isLoggedIn,
+  logout,
+  getClientId,
+  setClientId,
+  redirectUri,
+  SpotifyRateLimitError,
+} from './auth'

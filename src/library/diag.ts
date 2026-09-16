@@ -15,6 +15,13 @@ export interface DiagEntry {
   detail: string
 }
 
+let quiet = false
+
+/** 조합 점검처럼 수십 번 검색하는 동안에는 기록을 멈춘다. */
+export function setQuiet(v: boolean): void {
+  quiet = v
+}
+
 function read(): DiagEntry[] {
   try {
     const raw = localStorage.getItem(KEY)
@@ -25,6 +32,7 @@ function read(): DiagEntry[] {
 }
 
 export function log(what: string, ok: boolean, detail: string): void {
+  if (quiet) return
   try {
     const next = [{ at: Date.now(), what, ok, detail }, ...read()].slice(0, MAX)
     localStorage.setItem(KEY, JSON.stringify(next))
