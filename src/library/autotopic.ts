@@ -1,6 +1,8 @@
 import { newId, comboKey, type DB } from './store'
 import { mentions } from './match'
 import { toKorean, KNOWN_WORDS } from './english'
+// 그려둔 그림이 있는 카드에 앨범 사진을 덮어씌우면 안 된다.
+import { hasIcon } from '../components/icons'
 import type { Card } from '../types'
 
 /** 제목에 흔해서 주제가 될 수 없는 말. */
@@ -12,11 +14,18 @@ const STOP = new Set([
   'is', 'are', 'am', 'was', 'were', 'be', 'it', 'its', 'in', 'on', 'at', 'to', 'of',
   'for', 'with', 'my', 'me', 'we', 'you', 'your', 'our', 'they', 'he', 'she', 'his',
   'her', 'this', 'that', 'there', 'here', 'up', 'down', 'let', 'lets', 'all', 'oh',
+  'day', 'from', 'about', 'what', 'when', 'where', 'who', 'how', 'can', 'will', 'just',
   'yeah', 'la', 'na', 'feat', 'ft', 'ost', 'mix', 'edit', 'live', 'intro', 'outro',
   // 앨범 이름에서 넘어오는 말. 주제가 아니라 묶음 이름이다.
   '율동동요', '창작동요', '창작동요제', '동요제', '인기동요', '놀이동요', '영어동요',
   '초등', '유아', '전집', '모음집', '컴필레이션', '스페셜', '에디션', '타이틀',
-  '오리지널', '사운드트랙', '대표', '최신', '추천', '필수', '키즈', '어린이',
+  '오리지널', '사운드트랙', '대표', '최신', '추천', '필수', '키즈',
+  '학년', '교과서', '수록곡', '모음곡',
+  // 제목에서 떨어져 나오는 토막. 카드 이름이 될 수 없다.
+  '타고', '옆으로', '좋아요', '모두', '어디', '그대로', '올라갑니다', '내려갑니다',
+  '하나', '해요', '해봐요', '가요', '와요', '봐요', '돼요', '이에요', '예요',
+  '있나요', '아시나요', '노래해', '멈춰라', '기분이', '어때', '있어', '없어',
+  '주세요', '가자', '하자', '보자', '한대요', '했어요', '해줘', '이야',
 ])
 
 export interface Candidate {
@@ -24,6 +33,15 @@ export interface Candidate {
   count: number
   songIds: string[]
 }
+
+/**
+ * 카드 이름으로 약한 말. 뜻은 알지만 그림이 안 그려진다.
+ * '작은 별' 은 '작은' 이 아니라 '별' 이다.
+ */
+const WEAK = new Set([
+  '작은', '큰', '빠른', '느린', '행복한', '용감한', '무서운', '졸린', '맛있는',
+  '새', '좋은', '예쁜', '멋진', '신나는',
+])
 
 /** 한글 낱말이 영어 찌꺼기보다 카드 이름으로 낫다. */
 function hangul(word: string): number {
@@ -38,8 +56,14 @@ function hangul(word: string): number {
  * '정글'(2) 을 이기면 안 된다.
  */
 export function betterWord(a: Candidate, b: Candidate, known?: Set<string>): number {
+  const weak = (w: string) => (WEAK.has(w) ? 1 : 0)
   const k = (w: string) => (known?.has(w) ? 1 : 0)
+  /*
+   * 약한 말은 몇 곡을 묶든 뒤로 보낸다. 'Little Star' 와 'Little Duck' 을
+   * '작은' 한 장으로 묶느니 '별' 과 '오리' 두 장이 낫다.
+   */
   return (
+    weak(a.word) - weak(b.word) ||
     b.count - a.count ||
     k(b.word) - k(a.word) ||
     hangul(b.word) - hangul(a.word) ||
@@ -52,9 +76,12 @@ const COLORS = ['#FBDCD4', '#D7E3F7', '#FBE0E8', '#FAE8C6', '#CFEADD', '#EFE0C8'
 
 /**
  * 한 캐릭터에 카드가 이보다 많아지면 아이가 못 고른다.
- * 한 쪽에 6장씩 넘기니 4쪽까지다.
+ * 한 쪽에 6장씩 넘기니 5쪽까지다.
  */
-export const MAX_TOPICS = 24
+export const MAX_TOPICS = 30
+
+/** 이름을 못 지은 곡을 모아두는 카드. 캐릭터마다 한 장만 둔다. */
+const REST = '그 밖의 노래'
 
 /** 말에서 그림을 짐작한다. 못 찾으면 음표를 쓴다. */
 const EMOJI_HINTS: [string, string][] = [
@@ -78,7 +105,10 @@ const EMOJI_HINTS: [string, string][] = [
 ]
 
 export function guessEmoji(word: string): string {
-  for (const [key, emoji] of EMOJI_HINTS) if (word.includes(key)) return emoji
+  for (const [key, emoji] of EMOJI_HINTS) {
+    // 한 글자 힌트는 딱 그 말일 때만. '도깨비' 가 '비' 때문에 🌧️ 가 됐다.
+    if (key.length === 1 ? word === key : word.includes(key)) return emoji
+  }
   return '🎵'
 }
 
@@ -89,8 +119,11 @@ export function knownWords(cards: Card[]): Set<string> {
   return out
 }
 
-/** 낱말 뒤에 붙는 조사. 이것만 떼어낸다. */
-const PARTICLES = new Set(['이', '가', '은', '는', '을', '를', '의', '에', '도', '와', '과', '랑', '야', '요', '들'])
+/*
+ * 낱말 뒤에 붙는 조사. 이것만 떼어낸다.
+ * '이' 는 뺐다 — '호랑이' '고양이' '원숭이' '어린이' 가 잘려버린다.
+ */
+const PARTICLES = new Set(['가', '은', '는', '을', '를', '의', '에', '도', '와', '과', '랑', '야', '들'])
 
 /**
  * 낱말 다듬기.
@@ -104,14 +137,17 @@ const PARTICLES = new Set(['이', '가', '은', '는', '을', '를', '의', '에
 function normalize(word: string, known?: Set<string>): string {
   let w = word
   if (w.length >= 3 && w.endsWith('송')) w = w.slice(0, -1)
-  if (
-    known &&
-    w.length >= 3 &&
-    !known.has(w) &&
-    PARTICLES.has(w.slice(-1)) &&
-    known.has(w.slice(0, -1))
-  ) {
-    w = w.slice(0, -1)
+  // '바다에는' 처럼 두 개 붙기도 한다. 몇 번 더 본다.
+  for (let i = 0; i < 3; i += 1) {
+    if (known?.has(w)) break
+    if (w.length < 2 || !PARTICLES.has(w.slice(-1))) break
+    const rest = w.slice(0, -1)
+    /*
+     * 남는 쪽이 두 글자 이상이거나, 한 글자라도 아는 말이어야 뗀다.
+     * '비야' → '비' 는 되고 '노을' → '노' 는 안 된다.
+     */
+    if (rest.length >= 2 || known?.has(rest)) w = rest
+    else break
   }
   return w
 }
@@ -127,8 +163,11 @@ export function wordsOf(title: string, characterWord: string, known?: Set<string
       )
         .split(/[\s!?,.·()[\]{}~"'’“”\-–—:;/0-9]+/)
         .map((w) => normalize(w.trim(), known))
-        // 한글은 한 글자도 뜻이 있다 — 길·밥·배·별·눈·꽃. 영어는 두 글자부터.
-        .filter((w) => (w.length >= 2 || /^[가-힣]$/.test(w)) && !STOP.has(w.toLowerCase()))
+        /*
+         * 한글은 한 글자도 뜻이 있다 — 길·밥·배·별·눈·꽃. 다만 아는 말일
+         * 때만 쓴다. '모두 다 같이' 의 '다' 가 카드가 되면 안 된다.
+         */
+        .filter((w) => (w.length >= 2 || (known?.has(w) ?? false)) && !STOP.has(w.toLowerCase()))
         .filter((w) => !mentions(characterWord, w) && !mentions(w, characterWord)),
     ),
   ]
@@ -206,6 +245,33 @@ export function autoAssignTopics(d: DB): AutoResult {
     return id
   }
 
+  /*
+   * '그 밖의 노래' 는 캐릭터마다 한 장이면 된다. 앨범을 넣을 때마다
+   * 새로 만들었더니 같은 이름 카드가 네 장씩 쌓였다.
+   */
+  const restCard = (characterId: string): string => {
+    const found = cards.find(
+      (c) => c.kind === 'topic' && c.word === REST && c.forCharacters?.includes(characterId),
+    )
+    return found ? found.id : addCard(characterId, REST)
+  }
+
+  /*
+   * 그림도 이모지도 못 붙이는 카드는 앨범 사진이라도 쓴다. 음표만 여러 장
+   * 늘어서면 아이가 구분을 못 한다. 단 같은 사진이 두 장 붙으면 그것도
+   * 구분이 안 되니, 이미 쓴 사진은 안 쓴다.
+   */
+  const usedArt = new Set(cards.map((c) => c.image).filter(Boolean) as string[])
+  const dressUp = (topicId: string, songIds: Set<string>) => {
+    const card = cards.find((c) => c.id === topicId)
+    if (!card || card.image || hasIcon(card.id, card.word)) return
+    const art = songs.find((s) => songIds.has(s.id) && s.image && !usedArt.has(s.image))?.image
+    if (!art) return
+    usedArt.add(art)
+    const i = cards.indexOf(card)
+    cards[i] = { ...card, image: art }
+  }
+
   const attach = (songIds: Set<string>, characterId: string, topicId: string, word: string) => {
     const key = comboKey(characterId, topicId)
     const character = cards.find((c) => c.id === characterId)!
@@ -233,7 +299,10 @@ export function autoAssignTopics(d: DB): AutoResult {
     for (;;) {
       const best = pickBest(mine, character, cards)
       if (!best || best.count < 2 || topicCount() >= MAX_TOPICS) break
-      attach(new Set(best.songIds), character.id, addCard(character.id, best.word), best.word)
+      const ids = new Set(best.songIds)
+      const topicId = addCard(character.id, best.word)
+      attach(ids, character.id, topicId, best.word)
+      dressUp(topicId, ids)
       made += 1
       mine = songs.filter((s) => s.needsTopic === character.id)
     }
@@ -243,15 +312,17 @@ export function autoAssignTopics(d: DB): AutoResult {
       const song = mine[0]
       const best = pickBest([song], character, cards)
       const word = best?.word ?? toKorean(song.title.split(' - ')[0]).slice(0, 10)
-      attach(new Set([song.id]), character.id, addCard(character.id, word), word)
+      const ids = new Set([song.id])
+      const topicId = addCard(character.id, word)
+      attach(ids, character.id, topicId, word)
+      dressUp(topicId, ids)
       single += 1
       mine = songs.filter((s) => s.needsTopic === character.id)
     }
 
     // 3. 그래도 남으면 한 카드에 모은다
     if (mine.length > 0) {
-      const word = '그 밖의 노래'
-      attach(new Set(mine.map((s) => s.id)), character.id, addCard(character.id, word), word)
+      attach(new Set(mine.map((s) => s.id)), character.id, restCard(character.id), REST)
       rest += mine.length
     }
   }

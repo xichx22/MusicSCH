@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import { VEHICLE_ICONS } from './vehicles'
 import { CHARACTER_ICONS, HABIT_ICONS } from './others'
 import { WORD_ICONS } from './more'
+import { SEED_CARDS } from '../../library/seed'
 
 /*
  * 카드 아이콘.
@@ -19,8 +20,37 @@ const ICONS: Record<string, ReactElement> = {
   't-porclain': VEHICLE_ICONS['t-excavator'],
 }
 
+/*
+ * 말로 찾는 그림 한 벌.
+ *
+ * 씨앗 카드 그림은 't-bus' 처럼 카드 번호로만 달아뒀는데, 알아서 만든
+ * '버스' 카드는 번호가 't-made-…' 라 그 그림을 못 찾고 이모지로 나왔다.
+ * 씨앗 카드의 말에도 같은 그림을 달아준다.
+ */
+const BY_WORD: Record<string, ReactElement> = { ...WORD_ICONS }
+for (const card of SEED_CARDS) {
+  const drawn = ICONS[card.id]
+  if (!drawn) continue
+  if (!(card.word in BY_WORD)) BY_WORD[card.word] = drawn
+  if (card.label && !(card.label in BY_WORD)) BY_WORD[card.label] = drawn
+}
+
+/* 같은 뜻인데 글자가 달라 못 찾는 말. 이미 있는 그림을 빌려 쓴다. */
+for (const [from, to] of [
+  ['자장자장', '자장가'],
+  ['잘자요', '자장가'],
+  ['코자자', '자장가'],
+  ['손씻기', '세차'],
+  ['이닦기', '양치'],
+  ['칫솔', '양치'],
+  ['숲속', '숲'],
+  ['숲속길', '숲'],
+] as const) {
+  if (!(from in BY_WORD) && to in BY_WORD) BY_WORD[from] = BY_WORD[to]
+}
+
 /* 두 글자 이상인 말만 '들어 있으면 같은 그림' 으로 친다. 한 글자는 너무 헐겁다. */
-const LONG_WORDS = Object.keys(WORD_ICONS)
+const LONG_WORDS = Object.keys(BY_WORD)
   .filter((w) => w.length >= 2)
   .sort((a, b) => b.length - a.length)
 
@@ -34,9 +64,9 @@ const LONG_WORDS = Object.keys(WORD_ICONS)
 function iconFor(cardId: string, word?: string): ReactElement | undefined {
   if (cardId in ICONS) return ICONS[cardId]
   if (!word) return undefined
-  if (word in WORD_ICONS) return WORD_ICONS[word]
+  if (word in BY_WORD) return BY_WORD[word]
   const hit = LONG_WORDS.find((w) => word.includes(w))
-  return hit ? WORD_ICONS[hit] : undefined
+  return hit ? BY_WORD[hit] : undefined
 }
 
 export function hasIcon(cardId: string, word?: string): boolean {

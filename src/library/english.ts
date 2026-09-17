@@ -17,6 +17,7 @@ const DICT: [string, string][] = [
   /* 자동차 · 중장비 */
   ['fire truck', '소방차'], ['fire engine', '소방차'], ['firetruck', '소방차'],
   ['police car', '경찰차'], ['patrol car', '경찰차'], ['police', '경찰차'],
+  ['firefighter', '소방차'], ['fireman', '소방차'],
   ['ambulance', '구급차'], ['rescue team', '구조대'], ['rescue', '구조대'],
   ['dump truck', '덤프트럭'], ['garbage truck', '청소차'], ['trash truck', '청소차'],
   ['tow truck', '견인차'], ['ladder truck', '사다리차'], ['ice cream truck', '아이스크림차'],
@@ -74,17 +75,20 @@ const DICT: [string, string][] = [
   ['monkey', '원숭이'], ['animal', '동물'], ['insect', '곤충'],
   ['tyrannosaurus', '공룡'], ['t rex', '공룡'], ['jungle', '정글'], ['tail', '꼬리'],
   ['crocodile', '악어'], ['calf', '송아지'], ['music', '음악'], ['band', '음악대'],
-  ['rainbow', '무지개'], ['rain', '비'], ['snow', '눈'], ['wind', '바람'],
+  ['rainbow', '무지개'], ['rainy', '비'], ['rain', '비'], ['snowy', '눈'], ['sunny', '해'],
+  ['cloudy', '구름'], ['kindergarten', '유치원'], ['heart', '사랑'], ['snow', '눈'], ['wind', '바람'],
   ['cloud', '구름'], ['star', '별'], ['moon', '달'], ['flower', '꽃'], ['tree', '나무'],
   ['ocean', '바다'], ['sea', '바다'], ['beach', '바닷가'], ['mountain', '산'],
-  ['space', '우주'], ['winter', '겨울'], ['summer', '여름'], ['spring', '봄'],
+  ['space', '우주'], ['astronaut', '우주'], ['planet', '우주'], ['winter', '겨울'], ['summer', '여름'], ['spring', '봄'],
 
   /* 놀이 · 배우기 */
   ['hide and seek', '숨바꼭질'], ['playground', '놀이터'], ['playing', '놀이'],
   ['adventure', '모험'], ['surprise', '깜짝'], ['magic', '마법'], ['dream', '꿈'],
   ['dancing', '춤'], ['dance', '춤'], ['running', '달리기'], ['jumping', '점프'],
   ['number', '숫자'], ['counting', '숫자'], ['color', '색깔'], ['colour', '색깔'],
-  ['shape', '모양'], ['alphabet', '알파벳'], ['fruit', '과일'], ['vegetable', '채소'],
+  ['shape', '모양'], ['alphabet', '알파벳'], ['abc', '알파벳'], ['delicious', '맛있는'],
+  ['safety', '안전'], ['safe', '안전'], ['feeling', '감정'], ['emotion', '감정'],
+  ['superhero', '슈퍼영웅'], ['hero', '영웅'], ['forest', '숲'], ['woods', '숲'], ['fruit', '과일'], ['vegetable', '채소'],
   ['school bell', '학교종'], ['school', '학교'], ['park', '공원'], ['house', '집'], ['home', '집'], ['city', '도시'],
 
   /* 캐릭터 이름 — 한글로 바꿔야 '제목에서 캐릭터 이름 빼기' 가 먹는다 */
@@ -104,6 +108,7 @@ const DICT: [string, string][] = [
 const SAME_KO: [string, string][] = [
   ['티라노사우루스', '공룡'], ['브라키오사우루스', '공룡'], ['티라노', '공룡'], ['공룡알', '공룡'],
   ['굴삭기', '포크레인'], ['굴착기', '포크레인'], ['바닷속', '바다'], ['기상송', '일어나기'], ['기상', '일어나기'],
+  ['자장자장', '자장가'], ['코자자', '자장가'], ['잘자요', '자장가'],
 ]
 
 /** 사전이 아는 한글 낱말. 카드 이름으로 쓸 만한 말인지 가늠하는 데 쓴다. */

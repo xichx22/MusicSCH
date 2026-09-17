@@ -265,6 +265,138 @@ export const WORD_ICONS: Record<string, ReactElement> = {
       <circle cx="52" cy="26" r="7" fill="#C29260" />
     </>
   ),
+  원숭이: (
+    <>
+      <circle cx="13" cy="28" r="8" fill="#A97C50" />
+      <circle cx="51" cy="28" r="8" fill="#A97C50" />
+      <circle cx="13" cy="28" r="4" fill="#EBC8B0" />
+      <circle cx="51" cy="28" r="4" fill="#EBC8B0" />
+      <circle cx="32" cy="32" r="19" fill="#A97C50" />
+      <ellipse cx="32" cy="38" rx="14" ry="12" fill="#EBC8B0" />
+      <circle cx="26" cy="29" r="3" fill={D} />
+      <circle cx="38" cy="29" r="3" fill={D} />
+      <circle cx="29" cy="37" r="1.8" fill={D} />
+      <circle cx="35" cy="37" r="1.8" fill={D} />
+      <path d="M26 43 q6 5 12 0" fill="none" stroke={D} strokeWidth="3" strokeLinecap="round" />
+    </>
+  ),
+  펭귄: (
+    <>
+      <ellipse cx="32" cy="34" rx="18" ry="22" fill={D} />
+      <ellipse cx="32" cy="38" rx="12" ry="17" fill={W} />
+      <ellipse cx="11" cy="34" rx="5" ry="12" fill={D} transform="rotate(12 11 34)" />
+      <ellipse cx="53" cy="34" rx="5" ry="12" fill={D} transform="rotate(-12 53 34)" />
+      <circle cx="26" cy="24" r="3" fill={W} />
+      <circle cx="38" cy="24" r="3" fill={W} />
+      <circle cx="26" cy="24" r="1.6" fill={D} />
+      <circle cx="38" cy="24" r="1.6" fill={D} />
+      <path d="M28 30 h8 l-4 5 z" fill="#E8A33D" />
+      <path d="M22 56 h10 l-4 4 h-10 z M42 56 h-10 l4 4 h10 z" fill="#E8A33D" />
+    </>
+  ),
+  놀이: (
+    <>
+      <path d="M32 6 l24 14 v4 H8 v-4 z" fill="#D9503F" />
+      <rect x="10" y="24" width="44" height="6" rx="3" fill="#E8A33D" />
+      <path d="M18 30 v20 M32 30 v20 M46 30 v20" stroke="#8A7256" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="18" cy="42" r="6" fill="#4A79C4" />
+      <circle cx="32" cy="46" r="6" fill="#3FA680" />
+      <circle cx="46" cy="42" r="6" fill="#7C6CD8" />
+      <rect x="8" y="52" width="48" height="6" rx="3" fill="#E8A33D" />
+    </>
+  ),
+  안전: (
+    <>
+      <path d="M32 6 l22 8 v16 q0 16 -22 28 Q10 46 10 30 V14 z" fill="#3FA680" />
+      <path d="M22 32 l7 8 14 -16" fill="none" stroke={W} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+    </>
+  ),
+  감정: (
+    <>
+      <circle cx="20" cy="22" r="14" fill="#EFB752" />
+      <circle cx="15" cy="18" r="2.4" fill={D} />
+      <circle cx="25" cy="18" r="2.4" fill={D} />
+      <path d="M13 26 q7 7 14 0" fill="none" stroke={D} strokeWidth="3" strokeLinecap="round" />
+      <circle cx="44" cy="42" r="14" fill="#7FB5E8" />
+      <circle cx="39" cy="38" r="2.4" fill={D} />
+      <circle cx="49" cy="38" r="2.4" fill={D} />
+      <path d="M37 50 q7 -7 14 0" fill="none" stroke={D} strokeWidth="3" strokeLinecap="round" />
+    </>
+  ),
+  할로윈: (
+    <>
+      <path d="M32 16 q-22 0 -22 20 t22 22 q22 -2 22 -22 t-22 -20 z" fill="#E8A33D" />
+      <path d="M30 16 q0 -8 8 -10 q-4 6 0 10 z" fill="#6AA84F" />
+      <path d="M20 32 l8 -4 v8 z" fill={D} />
+      <path d="M44 32 l-8 -4 v8 z" fill={D} />
+      <path d="M20 44 h6 l3 4 4 -4 4 4 3 -4 h6 q-6 8 -13 8 t-13 -8 z" fill={D} />
+    </>
+  ),
+  // 어린이날 하면 바람개비다.
+  어린이날: (
+    <>
+      <rect x="30" y="26" width="5" height="32" rx="2" fill="#8A7256" />
+      <path d="M32 26 V6 q13 0 13 13 z" fill="#D9503F" />
+      <path d="M32 26 H52 q0 13 -13 13 z" fill="#E8A33D" />
+      <path d="M32 26 v20 q-13 0 -13 -13 z" fill="#4A79C4" />
+      <path d="M32 26 H12 q0 -13 13 -13 z" fill="#3FA680" />
+      <circle cx="32" cy="26" r="4" fill={W} />
+    </>
+  ),
+  숲: (
+    <>
+      <path d="M18 8 l11 18 h-6 l9 14 H8 l9 -14 h-6 z" fill="#3FA680" transform="translate(-2 0)" />
+      <rect x="14" y="40" width="5" height="14" rx="2" fill="#8A7256" />
+      <path d="M44 14 l12 20 h-7 l10 14 H29 l10 -14 h-7 z" fill="#4FBE8E" transform="translate(-2 0)" />
+      <rect x="41" y="48" width="6" height="10" rx="2" fill="#8A7256" />
+      <path d="M4 58 h56" stroke="#6AA84F" strokeWidth="5" strokeLinecap="round" />
+    </>
+  ),
+  비: (
+    <>
+      <path d="M18 30 a12 12 0 0 1 24 -4 a10 10 0 0 1 2 20 H18 a8 8 0 0 1 0 -16 z" fill="#B7BCC6" />
+      <path d="M18 50 l-3 8 M30 50 l-3 8 M42 50 l-3 8" stroke="#57A8E0" strokeWidth="5" strokeLinecap="round" />
+    </>
+  ),
+  도레미: (
+    <>
+      <rect x="6" y="18" width="52" height="30" rx="4" fill={W} stroke="#C9D2DD" strokeWidth="2" />
+      <path d="M6 26 h52 M6 33 h52 M6 40 h52" stroke="#C9D2DD" strokeWidth="2" />
+      <circle cx="20" cy="40" r="5" fill="#D9503F" />
+      <circle cx="34" cy="33" r="5" fill="#E8A33D" />
+      <circle cx="48" cy="26" r="5" fill="#4A79C4" />
+      <path d="M25 40 V22 M39 33 V15 M53 26 V8" stroke={D} strokeWidth="3" />
+    </>
+  ),
+  슈퍼영웅: (
+    <>
+      <path d="M32 8 l20 8 v14 q0 16 -20 26 Q12 46 12 30 V16 z" fill="#4A79C4" />
+      <path d="M32 18 l4 9 10 1 -7 7 2 10 -9 -5 -9 5 2 -10 -7 -7 10 -1 z" fill="#EFB752" />
+    </>
+  ),
+  머핀: (
+    <>
+      <path d="M14 30 h36 l-5 24 q-1 4 -5 4 H24 q-4 0 -5 -4 z" fill="#C98130" />
+      <path d="M22 34 v20 M32 34 v20 M42 34 v20" stroke="#A96D26" strokeWidth="3" />
+      <path d="M10 30 q2 -14 14 -14 q4 -8 12 -6 q10 0 10 10 q8 2 8 10 z" fill="#EBC8B0" />
+      <circle cx="24" cy="24" r="2.6" fill="#D9503F" />
+      <circle cx="38" cy="22" r="2.6" fill="#3FA680" />
+      <circle cx="31" cy="28" r="2.6" fill="#4A79C4" />
+    </>
+  ),
+  도깨비: (
+    <>
+      <path d="M14 20 q-4 -10 4 -12 q4 6 4 10 z" fill="#C98130" />
+      <path d="M50 20 q4 -10 -4 -12 q-4 6 -4 10 z" fill="#C98130" />
+      <circle cx="32" cy="34" r="20" fill="#D9503F" />
+      <circle cx="24" cy="30" r="4" fill={W} />
+      <circle cx="40" cy="30" r="4" fill={W} />
+      <circle cx="24" cy="30" r="2" fill={D} />
+      <circle cx="40" cy="30" r="2" fill={D} />
+      <path d="M22 42 h20 l-4 6 h-12 z" fill={W} />
+      <path d="M26 42 v6 M32 42 v6 M38 42 v6" stroke="#D9503F" strokeWidth="2" />
+    </>
+  ),
   곤충: (
     <>
       <circle cx="32" cy="22" r="9" fill={D} />
@@ -327,6 +459,44 @@ export const WORD_ICONS: Record<string, ReactElement> = {
   ),
 
   /* ---------- 배우기 ---------- */
+  알파벳: (
+    <text x="32" y="44" textAnchor="middle" fontSize="30" fontWeight="800" letterSpacing="1">
+      <tspan fill="#D9503F">A</tspan>
+      <tspan fill="#3FA680">B</tspan>
+      <tspan fill="#4A79C4">C</tspan>
+    </text>
+  ),
+  눈: (
+    <>
+      <path d="M32 6 v52 M9 19 l46 26 M55 19 L9 45" stroke="#7FB5E8" strokeWidth="5" strokeLinecap="round" />
+      <path d="M32 16 l-7 -7 M32 16 l7 -7 M32 48 l-7 7 M32 48 l7 7" stroke="#7FB5E8" strokeWidth="4" strokeLinecap="round" />
+      <path d="M18 24 l-9 -1 M18 24 l1 -9 M46 40 l9 1 M46 40 l-1 9" stroke="#7FB5E8" strokeWidth="4" strokeLinecap="round" />
+      <path d="M46 24 l9 -1 M46 24 l-1 -9 M18 40 l-9 1 M18 40 l1 9" stroke="#7FB5E8" strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
+  꽃: (
+    <>
+      <circle cx="32" cy="14" r="9" fill="#F2B8C6" />
+      <circle cx="49" cy="26" r="9" fill="#F2B8C6" />
+      <circle cx="43" cy="45" r="9" fill="#F2B8C6" />
+      <circle cx="21" cy="45" r="9" fill="#F2B8C6" />
+      <circle cx="15" cy="26" r="9" fill="#F2B8C6" />
+      <circle cx="32" cy="31" r="9" fill="#EFB752" />
+      <path d="M32 40 v18" stroke="#3FA680" strokeWidth="5" strokeLinecap="round" />
+      <path d="M32 50 q-10 -6 -14 2 q10 6 14 -2 z" fill="#3FA680" />
+    </>
+  ),
+  학교: (
+    <>
+      <path d="M32 6 l24 12 v6 H8 v-6 z" fill="#D9503F" />
+      <rect x="12" y="24" width="40" height="30" rx="4" fill={W} stroke="#C9D2DD" strokeWidth="2" />
+      <rect x="27" y="38" width="10" height="16" rx="2" fill="#8A7256" />
+      <rect x="17" y="30" width="8" height="8" rx="2" fill="#7FB5E8" />
+      <rect x="39" y="30" width="8" height="8" rx="2" fill="#7FB5E8" />
+      <rect x="29" y="2" width="4" height="8" rx="2" fill="#E8A33D" />
+      <path d="M6 54 h52" stroke="#8A7256" strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
   숫자: (
     <text x="32" y="45" textAnchor="middle" fontSize="34" fontWeight="800" letterSpacing="1">
       <tspan fill="#D9503F">1</tspan>
@@ -544,6 +714,38 @@ export const WORD_ICONS: Record<string, ReactElement> = {
       <circle cx="33" cy="37" r="6.5" fill="#B7BCC6" />
       <circle cx="49" cy="50" r="5" fill="#CFD5DE" />
       <path d="M52 50 V30" stroke="#CFD5DE" strokeWidth="3.5" />
+    </>
+  ),
+  엄마: (
+    <>
+      <path d="M32 4 a17 17 0 0 1 17 17 v14 h-34 V21 a17 17 0 0 1 17 -17 z" fill="#8A5A3C" />
+      <circle cx="32" cy="23" r="14" fill="#F2D4BC" />
+      <path d="M18 20 a14 14 0 0 1 28 0 q-7 -6 -14 -6 t-14 6 z" fill="#8A5A3C" />
+      <circle cx="27" cy="24" r="2.6" fill={D} />
+      <circle cx="37" cy="24" r="2.6" fill={D} />
+      <path d="M28 30 q4 4 8 0" fill="none" stroke={D} strokeWidth="3" strokeLinecap="round" />
+      <path d="M14 58 a18 18 0 0 1 36 0 z" fill="#E094A8" />
+    </>
+  ),
+  아빠: (
+    <>
+      <circle cx="32" cy="23" r="14" fill="#F2D4BC" />
+      <path d="M18 19 a14 14 0 0 1 28 0 q-7 -5 -14 -5 t-14 5 z" fill="#3A3229" />
+      <circle cx="27" cy="24" r="2.6" fill={D} />
+      <circle cx="37" cy="24" r="2.6" fill={D} />
+      <path d="M28 30 q4 4 8 0" fill="none" stroke={D} strokeWidth="3" strokeLinecap="round" />
+      <path d="M14 58 a18 18 0 0 1 36 0 z" fill="#4A79C4" />
+    </>
+  ),
+  아기: (
+    <>
+      <circle cx="32" cy="32" r="20" fill="#F2D4BC" />
+      <path d="M26 12 q6 -8 12 -2" fill="none" stroke="#C98130" strokeWidth="4" strokeLinecap="round" />
+      <circle cx="24" cy="30" r="3" fill={D} />
+      <circle cx="40" cy="30" r="3" fill={D} />
+      <circle cx="18" cy="38" r="4" fill="#F2B8C6" />
+      <circle cx="46" cy="38" r="4" fill="#F2B8C6" />
+      <path d="M27 40 q5 5 10 0" fill="none" stroke={D} strokeWidth="3" strokeLinecap="round" />
     </>
   ),
   친구: (
