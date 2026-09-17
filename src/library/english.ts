@@ -17,7 +17,7 @@ const DICT: [string, string][] = [
   /* 자동차 · 중장비 */
   ['fire truck', '소방차'], ['fire engine', '소방차'], ['firetruck', '소방차'],
   ['police car', '경찰차'], ['patrol car', '경찰차'], ['police', '경찰차'],
-  ['ambulance', '구급차'], ['rescue team', '구조대'], ['rescue', '구조'],
+  ['ambulance', '구급차'], ['rescue team', '구조대'], ['rescue', '구조대'],
   ['dump truck', '덤프트럭'], ['garbage truck', '청소차'], ['trash truck', '청소차'],
   ['tow truck', '견인차'], ['ladder truck', '사다리차'], ['ice cream truck', '아이스크림차'],
   ['monster truck', '몬스터트럭'], ['pickup truck', '픽업트럭'], ['truck', '트럭'],
@@ -27,6 +27,7 @@ const DICT: [string, string][] = [
   ['forklift', '지게차'], ['crane', '크레인'], ['tractor', '트랙터'],
   ['snow plow', '제설차'], ['street sweeper', '청소차'], ['sweeper', '청소차'],
   ['heavy equipment', '중장비'], ['heavy machine', '중장비'], ['heavy vehicle', '중장비'],
+  ['heavy', '중장비'], ['mixing', '레미콘'],
   ['construction', '공사'], ['school bus', '스쿨버스'], ['bus', '버스'],
   ['sports car', '스포츠카'], ['race car', '경주용차'], ['racing', '경주'], ['race', '경주'],
   ['taxi', '택시'], ['train', '기차'], ['subway', '지하철'],
@@ -37,7 +38,8 @@ const DICT: [string, string][] = [
   ['tunnel', '터널'], ['bridge', '다리'], ['garage', '차고'], ['siren', '사이렌'],
   ['wheel', '바퀴'], ['engine', '엔진'], ['horn', '경적'],
   ['driver', '운전사'], ['driving', '운전'], ['drive', '운전'],
-  ['repair', '수리'], ['fix', '수리'], ['emergency', '비상'],
+  ['repair', '수리'], ['fix', '수리'], ['emergency', '비상'], ['check', '점검'],
+  ['direction', '방향'], ['way', '길'], ['road', '길'], ['vroom', '부릉부릉'], ['beep', '빵빵'],
   ['car', '자동차'], ['vehicle', '자동차'],
 
   /* 생활 습관 */
@@ -45,6 +47,7 @@ const DICT: [string, string][] = [
   ['teeth', '양치'], ['tooth', '양치'],
   ['bath time', '목욕'], ['bathtime', '목욕'], ['bath', '목욕'],
   ['wash your hands', '손씻기'], ['washing hands', '손씻기'], ['wash hands', '손씻기'],
+  ['wake up', '일어나기'], ['waking', '일어나기'], ['wake', '일어나기'],
   ['bedtime', '자장가'], ['good night', '자장가'], ['lullaby', '자장가'],
   ['sleeping', '자장가'], ['sleepy', '졸린'], ['sleep', '자장가'],
   ['potty', '응가'], ['poop', '응가'], ['diaper', '기저귀'],
@@ -61,6 +64,7 @@ const DICT: [string, string][] = [
   ['baby', '아기'], ['friend', '친구'], ['friends', '친구'],
   ['hello', '인사'], ['goodbye', '인사'], ['thank you', '고마워'], ['sorry', '미안해'],
   ['happy', '행복한'], ['brave', '용감한'], ['strong', '힘센'], ['scared', '무서운'],
+  ['love', '사랑'], ['opposite', '반대말'], ['career', '직업'], ['job', '직업'],
 
   /* 동물 · 자연 */
   ['dinosaur', '공룡'], ['baby shark', '아기상어'], ['shark', '상어'], ['elephant', '코끼리'], ['rabbit', '토끼'],
@@ -68,6 +72,8 @@ const DICT: [string, string][] = [
   ['cat', '고양이'], ['pig', '돼지'], ['duck', '오리'], ['butterfly', '나비'],
   ['frog', '개구리'], ['penguin', '펭귄'], ['lion', '사자'], ['tiger', '호랑이'],
   ['monkey', '원숭이'], ['animal', '동물'], ['insect', '곤충'],
+  ['tyrannosaurus', '공룡'], ['t rex', '공룡'], ['jungle', '정글'], ['tail', '꼬리'],
+  ['crocodile', '악어'], ['calf', '송아지'], ['music', '음악'], ['band', '음악대'],
   ['rainbow', '무지개'], ['rain', '비'], ['snow', '눈'], ['wind', '바람'],
   ['cloud', '구름'], ['star', '별'], ['moon', '달'], ['flower', '꽃'], ['tree', '나무'],
   ['ocean', '바다'], ['sea', '바다'], ['beach', '바닷가'], ['mountain', '산'],
@@ -91,6 +97,18 @@ const DICT: [string, string][] = [
   ['fast', '빠른'], ['slow', '느린'], ['big', '큰'], ['little', '작은'], ['small', '작은'],
 ]
 
+/**
+ * 같은 것을 가리키는 한글 낱말. 카드가 갈라지지 않게 하나로 모은다.
+ * 영어와 달리 낱말 경계를 안 따져도 돼서 그냥 바꾼다.
+ */
+const SAME_KO: [string, string][] = [
+  ['티라노사우루스', '공룡'], ['브라키오사우루스', '공룡'], ['티라노', '공룡'], ['공룡알', '공룡'],
+  ['굴삭기', '포크레인'], ['굴착기', '포크레인'], ['바닷속', '바다'], ['기상송', '일어나기'], ['기상', '일어나기'],
+]
+
+/** 사전이 아는 한글 낱말. 카드 이름으로 쓸 만한 말인지 가늠하는 데 쓴다. */
+export const KNOWN_WORDS = new Set([...DICT.map(([, ko]) => ko), ...SAME_KO.map(([, ko]) => ko)])
+
 /** 정규식에서 뜻을 갖는 글자를 막는다. */
 function escape(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -108,8 +126,9 @@ const RULES = DICT.sort((a, b) => b[0].length - a[0].length).map(([en, ko]) => [
 
 /** 영어가 섞인 제목을 한글로. 사전에 없는 말은 그대로 둔다. */
 export function toKorean(text: string): string {
-  if (!/[A-Za-z]/.test(text)) return text
   let out = text
+  for (const [from, to] of SAME_KO) out = out.split(from).join(to)
+  if (!/[A-Za-z]/.test(out)) return out
   // 'Let's go' 처럼 줄임표가 끼면 낱말이 갈라진다. 먼저 편다.
   out = out.replace(/let'?s\s+go/gi, ' 출발 ')
   for (const [re, ko] of RULES) out = out.replace(re, `$1 ${ko} `)

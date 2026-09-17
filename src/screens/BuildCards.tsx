@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
 import { newId, comboKey, type DB } from '../library/store'
-import { autoAssignTopics, autoSummary, betterWord, guessEmoji, wordsOf } from '../library/autotopic'
+import {
+  autoAssignTopics,
+  autoSummary,
+  betterWord,
+  guessEmoji,
+  knownWords,
+  wordsOf,
+} from '../library/autotopic'
 import type { Card } from '../types'
 
 /** 카드 색을 돌아가며 쓴다. */
@@ -34,9 +41,10 @@ export function BuildCards({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
       const mine = pending.filter((s) => s.needsTopic === character.id)
       if (mine.length === 0) continue
 
+      const known = knownWords(db.cards)
       const counter = new Map<string, string[]>()
       for (const song of mine) {
-        for (const w of wordsOf(song.title, character.word)) {
+        for (const w of wordsOf(song.title, character.word, known)) {
           counter.set(w, [...(counter.get(w) ?? []), song.id])
         }
       }
@@ -45,9 +53,16 @@ export function BuildCards({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) =>
         .map(([word, songIds]) => ({ word, count: songIds.length, songIds }))
         // 한 곡에만 나오는 말은 카드로 만들 값어치가 없다
         .filter((c) => c.count >= 2)
-        // 이미 있는 카드는 뺀다
-        .filter((c) => !topics.some((t) => t.word === c.word))
-        .sort(betterWord)
+        // 이 캐릭터가 쓸 수 있는 카드 이름만 뺀다
+        .filter(
+          (c) =>
+            !topics.some(
+              (t) =>
+                t.word === c.word &&
+                (!t.forCharacters || t.forCharacters.includes(character.id)),
+            ),
+        )
+        .sort((a, b) => betterWord(a, b, known))
         .slice(0, 12)
 
       if (list.length > 0) out.set(character.id, list)

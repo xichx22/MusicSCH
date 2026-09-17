@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { comboKey, newId, type DB } from '../library/store'
-import { mentions } from '../library/match'
 import { getLinkTracks, parseLink, type BulkTrack } from '../sources/spotify'
 import { RECOMMENDED_ALBUMS, albumUrl } from '../library/albums'
 import { autoAssignTopics, autoSummary } from '../library/autotopic'
-import { toKorean } from '../library/english'
+import { guessTopic } from '../library/guess'
 import type { Card, Song } from '../types'
 
 interface Planned {
@@ -45,42 +44,8 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
 
   const character = characters.find((c) => c.id === characterId)
 
-  /**
-   * 이 캐릭터에서 쓸 수 있는 주제 중, 곡 제목에 이름이 든 것.
-   *
-   * 앨범을 가져오면 곡 제목이 영어인 경우가 많다('Fire Truck Song').
-   * 그래서 한글 낱말과 영어 낱말을 둘 다 본다. 여러 개가 걸리면 길게
-   * 맞은 쪽이 이긴다 ('덤프트럭' 이 '트럭' 보다 구체적이다).
-   */
-  const guessTopic = (trackName: string, forCharacter: Card): Card | null => {
-    // 'Fire Truck Song' 을 '소방차 Song' 으로 바꿔놓고 한글 카드와 맞춰본다.
-    // 별명(alsoMatch)도 바꾸고 남은 글자에서 찾는다. 'Car Wash Song' 은
-    // 이미 '세차' 가 됐으니 'car' 별명이 끼어들어 자동차가 되면 안 된다.
-    const ko = toKorean(trackName)
-    const lower = ko.toLowerCase()
-    const hits: { card: Card; len: number }[] = []
-
-    for (const t of topics) {
-      if (t.forCharacters && !t.forCharacters.includes(forCharacter.id)) continue
-
-      let len = 0
-      if (mentions(ko, t.word)) len = t.word.length
-      for (const alt of t.alsoMatch ?? []) {
-        if (lower.includes(alt.toLowerCase())) len = Math.max(len, alt.length)
-      }
-      if (len > 0) hits.push({ card: t, len })
-    }
-    if (hits.length === 0) return null
-
-    /*
-     * 길게 맞은 쪽이 이긴다. '자동차 가족' 은 '가족'(2) 보다 '자동차'(3) 다.
-     * 길이가 같으면 뭉뚱그린 카드가 양보한다 — 'Police Car Song' 은
-     * 경찰차지 자동차가 아니다.
-     */
-    return hits.sort(
-      (a, b) => b.len - a.len || Number(!!a.card.generic) - Number(!!b.card.generic),
-    )[0].card
-  }
+  const guess = (trackName: string, forCharacter: Card) =>
+    guessTopic(trackName, forCharacter, topics)
 
   const look = async () => {
     const parsed = parseLink(link)
@@ -96,8 +61,8 @@ export function AddByLink({ db, setDb }: { db: DB; setDb: (u: (d: DB) => DB) => 
       if (tracks.length === 0) {
         setNote('곡을 못 가져왔어. 링크가 맞는지, 할당량이 남았는지 봐줘.')
       } else {
-        setPlan(tracks.map((track) => ({ track, topic: guessTopic(track.trackName, character) })))
-        const matched = tracks.filter((t) => guessTopic(t.trackName, character)).length
+        setPlan(tracks.map((track) => ({ track, topic: guess(track.trackName, character) })))
+        const matched = tracks.filter((t) => guess(t.trackName, character)).length
         setNote(`${tracks.length}곡을 찾았어. 그중 ${matched}곡은 주제까지 알아서 정했어.`)
       }
     } catch (e) {

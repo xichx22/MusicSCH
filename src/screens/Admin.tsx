@@ -10,6 +10,7 @@ import { ComboCheck } from './ComboCheck'
 import { CardArt } from './CardArt'
 import { AddByLink } from './AddByLink'
 import { BuildCards } from './BuildCards'
+import { FixCards } from './FixCards'
 import { ExportList } from './ExportList'
 
 interface Props {
@@ -165,6 +166,8 @@ export function Admin({ db, setDb, onClose }: Props) {
       {db.settings.searchSourceId === 'spotify' && <SpotifyPanel />}
 
       <AddByLink db={db} setDb={setDb} />
+
+      <FixCards db={db} setDb={setDb} />
 
       <BuildCards db={db} setDb={setDb} />
 

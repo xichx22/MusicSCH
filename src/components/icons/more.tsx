@@ -357,6 +357,195 @@ export const WORD_ICONS: Record<string, ReactElement> = {
       <rect x="6" y="42" width="52" height="9" rx="4" fill="#EFB752" />
     </>
   ),
+  길: (
+    <>
+      <path d="M22 58 q4 -26 0 -52 h20 q-4 26 0 52 z" fill="#8A8F9B" />
+      <path d="M32 10 v8 M32 26 v8 M32 42 v8" stroke={W} strokeWidth="4" strokeLinecap="round" />
+      <path d="M4 58 q6 -10 14 -10 M60 58 q-6 -10 -14 -10" fill="none" stroke="#6AA84F" strokeWidth="6" strokeLinecap="round" />
+    </>
+  ),
+  다리: (
+    <>
+      <path d="M4 26 h56" stroke="#D9503F" strokeWidth="6" strokeLinecap="round" />
+      <path d="M8 26 q24 -20 48 0" fill="none" stroke="#D9503F" strokeWidth="5" />
+      <path d="M16 26 v-9 M32 26 v-13 M48 26 v-9" stroke="#D9503F" strokeWidth="4" strokeLinecap="round" />
+      <path d="M10 26 v14 M54 26 v14" stroke="#B43F31" strokeWidth="5" strokeLinecap="round" />
+      <path d="M4 44 q14 -6 28 0 t28 0" fill="none" stroke="#57A8E0" strokeWidth="5" strokeLinecap="round" />
+      <path d="M4 54 q14 -6 28 0 t28 0" fill="none" stroke="#9FD3F0" strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
+  수리: (
+    <>
+      {/* 드라이버 */}
+      <g transform="rotate(45 32 32)">
+        <rect x="28" y="4" width="8" height="9" rx="2" fill="#8A8F9B" />
+        <rect x="25" y="13" width="14" height="21" rx="5" fill="#E8A33D" />
+        <rect x="29" y="34" width="6" height="24" rx="2" fill="#B7BCC6" />
+      </g>
+      {/* 스패너 */}
+      <g transform="rotate(-45 32 32)">
+        <rect x="29" y="14" width="7" height="42" rx="3.5" fill="#6E7683" />
+        <path d="M25 6 h5.5 v6 h3.5 V6 H39 v11 a7 7 0 0 1 -14 0 z" fill="#6E7683" />
+      </g>
+    </>
+  ),
+  점검: (
+    <>
+      <rect x="12" y="10" width="40" height="46" rx="6" fill={W} stroke="#C9D2DD" strokeWidth="2" />
+      <rect x="24" y="5" width="16" height="9" rx="3" fill="#8A8F9B" />
+      <path d="M20 26 l5 5 9 -11" fill="none" stroke="#3FA680" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 42 l5 5 9 -11" fill="none" stroke="#3FA680" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M38 27 h10 M38 43 h10" stroke="#C9D2DD" strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
+  제설차: (
+    <>
+      <path d="M6 44 V26 q0 -4 5 -4 l5 4 v18 z" fill="#4A79C4" />
+      <rect x="18" y="24" width="24" height="18" rx="5" fill="#E8A33D" />
+      <rect x="22" y="28" width="12" height="9" rx="3" fill={W} />
+      <rect x="42" y="30" width="14" height="12" rx="3" fill="#EFB752" />
+      {wheels([26, 48], 48, 6)}
+      <circle cx="14" cy="12" r="3" fill={W} />
+      <circle cx="30" cy="8" r="3" fill={W} />
+      <circle cx="46" cy="14" r="3" fill={W} />
+    </>
+  ),
+  방향: (
+    <>
+      <rect x="29" y="18" width="6" height="40" rx="2" fill="#8A7256" />
+      <path d="M32 12 h22 l6 7 -6 7 H32 z" fill="#E8A33D" />
+      <path d="M32 30 H10 l-6 7 6 7 h22 z" fill="#3FA680" />
+    </>
+  ),
+  반대말: (
+    <>
+      <path d="M40 16 h14 l-8 -8 M54 16 l-8 8" fill="none" stroke="#D9503F" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 16 h30" stroke="#D9503F" strokeWidth="5" strokeLinecap="round" />
+      <path d="M24 44 H10 l8 -8 M10 44 l8 8" fill="none" stroke="#4A79C4" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M54 44 H24" stroke="#4A79C4" strokeWidth="5" strokeLinecap="round" />
+    </>
+  ),
+  사랑: (
+    <path d="M32 56 C 8 40 4 26 4 20 A 14 14 0 0 1 32 16 A 14 14 0 0 1 60 20 c0 6 -4 20 -28 36 z" fill="#D9503F" />
+  ),
+  정글: (
+    <>
+      <path d="M30 58 V26" stroke="#8A7256" strokeWidth="6" strokeLinecap="round" />
+      <path d="M30 28 q-14 -14 -26 -8 q10 14 26 8 z" fill="#3FA680" />
+      <path d="M30 24 q14 -16 26 -8 q-10 14 -26 8 z" fill="#4FBE8E" />
+      <path d="M30 16 q-8 -14 2 -14 q10 2 6 14 z" fill="#3FA680" />
+      <path d="M6 58 q8 -8 18 -4" fill="none" stroke="#6AA84F" strokeWidth="5" strokeLinecap="round" />
+      <path d="M58 58 q-8 -8 -18 -4" fill="none" stroke="#6AA84F" strokeWidth="5" strokeLinecap="round" />
+    </>
+  ),
+  꼬리: (
+    <>
+      <ellipse cx="22" cy="42" rx="18" ry="14" fill="#C29260" />
+      <path d="M38 36 q16 -6 14 -18 q-1 -8 -8 -6 q-6 2 -3 9" fill="none" stroke="#A97C50" strokeWidth="7" strokeLinecap="round" />
+      <rect x="12" y="50" width="7" height="9" rx="3" fill="#A97C50" />
+      <rect x="26" y="50" width="7" height="9" rx="3" fill="#A97C50" />
+    </>
+  ),
+  반짝: (
+    <>
+      <path d="M26 6 l5 13 13 5 -13 5 -5 13 -5 -13 -13 -5 13 -5 z" fill="#E8A33D" />
+      <path d="M47 30 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3 z" fill="#EFB752" />
+      <path d="M18 42 l2 6 6 2 -6 2 -2 6 -2 -6 -6 -2 6 -2 z" fill="#FBE0A0" />
+    </>
+  ),
+  악어: (
+    <>
+      <path d="M4 40 h44 q10 0 12 -6 v12 q-2 6 -12 6 H4 z" fill="#6AA84F" />
+      <path d="M6 40 l4 -6 4 6 4 -6 4 6 4 -6 4 6 4 -6 4 6" fill="none" stroke="#4E8A3A" strokeWidth="3" />
+      <path d="M48 46 l-6 6 M40 46 l-6 6" stroke={W} strokeWidth="3" strokeLinecap="round" />
+      <circle cx="30" cy="34" r="6" fill="#7CBB5C" />
+      <circle cx="30" cy="33" r="2.5" fill={D} />
+    </>
+  ),
+  송아지: (
+    <>
+      <circle cx="32" cy="34" r="20" fill={W} stroke="#E2D5C0" strokeWidth="2" />
+      <path d="M12 22 q-6 -8 2 -10 q7 -1 8 7 z" fill="#C29260" />
+      <path d="M52 22 q6 -8 -2 -10 q-7 -1 -8 7 z" fill="#C29260" />
+      <ellipse cx="32" cy="44" rx="12" ry="9" fill="#EBC8B0" />
+      <circle cx="27" cy="43" r="2.2" fill={D} />
+      <circle cx="37" cy="43" r="2.2" fill={D} />
+      <circle cx="24" cy="30" r="3" fill={D} />
+      <circle cx="40" cy="30" r="3" fill={D} />
+      <path d="M18 18 q8 -4 12 4 q-8 4 -12 -4 z" fill="#C29260" />
+    </>
+  ),
+  돼지: (
+    <>
+      <circle cx="32" cy="34" r="20" fill="#F2B8C6" />
+      <path d="M14 18 q-2 -10 8 -8 q4 1 4 8 z" fill="#E8A0B2" />
+      <path d="M50 18 q2 -10 -8 -8 q-4 1 -4 8 z" fill="#E8A0B2" />
+      <ellipse cx="32" cy="40" rx="11" ry="8" fill="#E8A0B2" />
+      <circle cx="28" cy="40" r="2.4" fill={D} />
+      <circle cx="36" cy="40" r="2.4" fill={D} />
+      <circle cx="24" cy="28" r="3" fill={D} />
+      <circle cx="40" cy="28" r="3" fill={D} />
+    </>
+  ),
+  행복: (
+    <>
+      <circle cx="32" cy="32" r="24" fill="#EFB752" />
+      <circle cx="23" cy="26" r="3.4" fill={D} />
+      <circle cx="41" cy="26" r="3.4" fill={D} />
+      <path d="M20 38 q12 12 24 0" fill="none" stroke={D} strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
+  일어나기: (
+    <>
+      <circle cx="32" cy="36" r="19" fill={W} stroke="#C9D2DD" strokeWidth="3" />
+      <path d="M32 26 v10 l7 5" fill="none" stroke={D} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M16 14 l6 6 M48 14 l-6 6" stroke="#D9503F" strokeWidth="5" strokeLinecap="round" />
+      <path d="M12 8 a10 10 0 0 1 12 2 M52 8 a10 10 0 0 0 -12 2" fill="none" stroke="#D9503F" strokeWidth="5" strokeLinecap="round" />
+    </>
+  ),
+  음악: (
+    <>
+      <path d="M24 44 V14 l24 -6 v30" fill="none" stroke={D} strokeWidth="5" strokeLinejoin="round" />
+      <path d="M24 20 l24 -6" stroke={D} strokeWidth="5" />
+      <circle cx="18" cy="46" r="8" fill="#D9503F" />
+      <circle cx="42" cy="40" r="8" fill="#4A79C4" />
+    </>
+  ),
+  노을: (
+    <>
+      <path d="M8 40 a24 24 0 0 1 48 0 z" fill="#E8A33D" />
+      <path d="M4 40 h56" stroke="#D9503F" strokeWidth="5" strokeLinecap="round" />
+      <path d="M4 48 q14 -5 28 0 t28 0" fill="none" stroke="#D9503F" strokeWidth="5" strokeLinecap="round" />
+      <path d="M4 56 q14 -5 28 0 t28 0" fill="none" stroke="#E8A33D" strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
+  힘센: (
+    <>
+      <rect x="20" y="28" width="24" height="8" rx="4" fill="#6E7683" />
+      <rect x="12" y="18" width="11" height="28" rx="5" fill={D} />
+      <rect x="41" y="18" width="11" height="28" rx="5" fill={D} />
+      <rect x="4" y="25" width="9" height="14" rx="4" fill="#6E7683" />
+      <rect x="51" y="25" width="9" height="14" rx="4" fill="#6E7683" />
+    </>
+  ),
+  부릉부릉: (
+    <>
+      <path d="M22 44 v-7 q0 -3 4 -5 l5 -6 q2 -2 4 -2 h10 q3 0 4 2 l5 6 q4 2 4 5 v7 z" fill="#D9503F" />
+      <path d="M33 27 h6 v6 h-10 z" fill={W} />
+      <path d="M43 27 h4 l4 6 h-8 z" fill={W} />
+      {wheels([31, 51], 47, 6)}
+      <path d="M4 24 h12 M2 34 h14 M6 44 h10" stroke="#8A8F9B" strokeWidth="4" strokeLinecap="round" />
+    </>
+  ),
+  '그 밖의 노래': (
+    <>
+      <path d="M18 40 V12 l20 -5 v28" fill="none" stroke="#8A8F9B" strokeWidth="4" strokeLinejoin="round" />
+      <circle cx="13" cy="42" r="6.5" fill="#B7BCC6" />
+      <circle cx="33" cy="37" r="6.5" fill="#B7BCC6" />
+      <circle cx="49" cy="50" r="5" fill="#CFD5DE" />
+      <path d="M52 50 V30" stroke="#CFD5DE" strokeWidth="3.5" />
+    </>
+  ),
   친구: (
     <>
       <circle cx="21" cy="20" r="9" fill="#E8A33D" />

@@ -1,6 +1,6 @@
 import { newId, comboKey, type DB } from './store'
 import { mentions } from './match'
-import { toKorean } from './english'
+import { toKorean, KNOWN_WORDS } from './english'
 import type { Card } from '../types'
 
 /** 제목에 흔해서 주제가 될 수 없는 말. */
@@ -13,6 +13,10 @@ const STOP = new Set([
   'for', 'with', 'my', 'me', 'we', 'you', 'your', 'our', 'they', 'he', 'she', 'his',
   'her', 'this', 'that', 'there', 'here', 'up', 'down', 'let', 'lets', 'all', 'oh',
   'yeah', 'la', 'na', 'feat', 'ft', 'ost', 'mix', 'edit', 'live', 'intro', 'outro',
+  // 앨범 이름에서 넘어오는 말. 주제가 아니라 묶음 이름이다.
+  '율동동요', '창작동요', '창작동요제', '동요제', '인기동요', '놀이동요', '영어동요',
+  '초등', '유아', '전집', '모음집', '컴필레이션', '스페셜', '에디션', '타이틀',
+  '오리지널', '사운드트랙', '대표', '최신', '추천', '필수', '키즈', '어린이',
 ])
 
 export interface Candidate {
@@ -26,9 +30,21 @@ function hangul(word: string): number {
   return /[가-힣]/.test(word) ? 1 : 0
 }
 
-/** 카드 이름으로 더 나은 쪽이 앞에 오게. 많이 나온 말 > 한글 > 긴 말. */
-export function betterWord(a: Candidate, b: Candidate): number {
-  return b.count - a.count || hangul(b.word) - hangul(a.word) || b.word.length - a.word.length
+/**
+ * 카드 이름으로 더 나은 쪽이 앞에.
+ * 많이 나온 말 > 아는 말 > 한글 > 긴 말.
+ *
+ * '아는 말' 을 길이보다 앞세운다. '정글 숲을 지나서' 에서 '지나서'(3) 가
+ * '정글'(2) 을 이기면 안 된다.
+ */
+export function betterWord(a: Candidate, b: Candidate, known?: Set<string>): number {
+  const k = (w: string) => (known?.has(w) ? 1 : 0)
+  return (
+    b.count - a.count ||
+    k(b.word) - k(a.word) ||
+    hangul(b.word) - hangul(a.word) ||
+    b.word.length - a.word.length
+  )
 }
 
 /** 카드 색을 돌아가며 쓴다. */
@@ -66,19 +82,42 @@ export function guessEmoji(word: string): string {
   return '🎵'
 }
 
+/** 아는 말 — 사전이 아는 한글 낱말 + 이미 카드가 된 말. */
+export function knownWords(cards: Card[]): Set<string> {
+  const out = new Set(KNOWN_WORDS)
+  for (const c of cards) if (c.kind === 'topic' && c.word.length >= 2) out.add(c.word)
+  return out
+}
+
+/** 낱말 뒤에 붙는 조사. 이것만 떼어낸다. */
+const PARTICLES = new Set(['이', '가', '은', '는', '을', '를', '의', '에', '도', '와', '과', '랑', '야', '요', '들'])
+
 /**
- * '세차송' 과 '세차' 는 같은 말로 친다.
+ * 낱말 다듬기.
  *
- * 동요 제목은 '-송' 으로 끝나는 게 흔하다. 그대로 두면 같은 주제가
- * 두 카드로 갈라지고, 그림 짐작도 빗나간다.
+ *  - '세차송' → '세차'. 동요 제목은 '-송' 으로 끝나는 게 흔하다.
+ *    그대로 두면 같은 주제가 두 카드로 갈라지고 그림도 빗나간다.
+ *  - '나비야' → '나비', '버스가' → '버스'. 아는 말 뒤에 조사 한 글자가
+ *    붙은 것뿐이면 떼어낸다. 조사가 아니면 그냥 둔다 ('작은별' 은
+ *    '작은' 이 아니고 '힘센차' 는 '힘센' 이 아니다).
  */
-function normalize(word: string): string {
-  if (word.length >= 3 && word.endsWith('송')) return word.slice(0, -1)
-  return word
+function normalize(word: string, known?: Set<string>): string {
+  let w = word
+  if (w.length >= 3 && w.endsWith('송')) w = w.slice(0, -1)
+  if (
+    known &&
+    w.length >= 3 &&
+    !known.has(w) &&
+    PARTICLES.has(w.slice(-1)) &&
+    known.has(w.slice(0, -1))
+  ) {
+    w = w.slice(0, -1)
+  }
+  return w
 }
 
 /** 제목에서 쓸 만한 말을 뽑는다. 가수 이름과 흔한 말은 뺀다. */
-export function wordsOf(title: string, characterWord: string): string[] {
+export function wordsOf(title: string, characterWord: string, known?: Set<string>): string[] {
   return [
     ...new Set(
       // 영어 제목은 먼저 한글로 바꾼다. 안 그러면 'Excavator' 카드가 생긴다.
@@ -87,8 +126,9 @@ export function wordsOf(title: string, characterWord: string): string[] {
         title.split(' - ')[0],
       )
         .split(/[\s!?,.·()[\]{}~"'’“”\-–—:;/0-9]+/)
-        .map((w) => normalize(w.trim()))
-        .filter((w) => w.length >= 2 && !STOP.has(w.toLowerCase()))
+        .map((w) => normalize(w.trim(), known))
+        // 한글은 한 글자도 뜻이 있다 — 길·밥·배·별·눈·꽃. 영어는 두 글자부터.
+        .filter((w) => (w.length >= 2 || /^[가-힣]$/.test(w)) && !STOP.has(w.toLowerCase()))
         .filter((w) => !mentions(characterWord, w) && !mentions(w, characterWord)),
     ),
   ]
@@ -97,19 +137,33 @@ export function wordsOf(title: string, characterWord: string): string[] {
 /** 이 곡들에서 카드로 만들기 가장 좋은 말. */
 export function pickBest(
   songs: { id: string; title: string }[],
-  characterWord: string,
+  character: Card,
   cards: Card[],
 ): Candidate | null {
+  const known = knownWords(cards)
   const counter = new Map<string, string[]>()
   for (const song of songs) {
-    for (const w of wordsOf(song.title, characterWord)) {
+    for (const w of wordsOf(song.title, character.word, known)) {
       counter.set(w, [...(counter.get(w) ?? []), song.id])
     }
   }
   const list = [...counter.entries()]
     .map(([word, songIds]) => ({ word, count: songIds.length, songIds }))
-    .filter((c) => !cards.some((t) => t.kind === 'topic' && t.word === c.word))
-    .sort(betterWord)
+    /*
+     * 이미 있는 카드 이름은 뺀다. 단 '이 캐릭터가 쓸 수 있는' 카드만 센다.
+     * 숫자 카드는 핑크퐁·베베핀 것이라 타요에는 안 보인다. 그런데도
+     * 빼버리면 타요의 'The Number Song' 이 이름을 못 얻는다.
+     */
+    .filter(
+      (c) =>
+        !cards.some(
+          (t) =>
+            t.kind === 'topic' &&
+            t.word === c.word &&
+            (!t.forCharacters || t.forCharacters.includes(character.id)),
+        ),
+    )
+    .sort((a, b) => betterWord(a, b, known))
   return list[0] ?? null
 }
 
@@ -177,7 +231,7 @@ export function autoAssignTopics(d: DB): AutoResult {
 
     // 1. 여러 곡에 겹치는 말부터
     for (;;) {
-      const best = pickBest(mine, character.word, cards)
+      const best = pickBest(mine, character, cards)
       if (!best || best.count < 2 || topicCount() >= MAX_TOPICS) break
       attach(new Set(best.songIds), character.id, addCard(character.id, best.word), best.word)
       made += 1
@@ -187,7 +241,7 @@ export function autoAssignTopics(d: DB): AutoResult {
     // 2. 한 곡짜리도 제목에서 이름을 지어 카드를 만든다
     while (mine.length > 0 && topicCount() < MAX_TOPICS) {
       const song = mine[0]
-      const best = pickBest([song], character.word, cards)
+      const best = pickBest([song], character, cards)
       const word = best?.word ?? toKorean(song.title.split(' - ')[0]).slice(0, 10)
       attach(new Set([song.id]), character.id, addCard(character.id, word), word)
       single += 1
