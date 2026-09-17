@@ -18,6 +18,17 @@
 
 둘 다 켜져 있어야 파이가 인증서를 받는다.
 
+**Serve 기능도 따로 켜야 한다.** 안 켜고 3단계를 하면 이렇게 나온다.
+
+```
+Serve is not enabled on your tailnet.
+To enable, visit:
+        https://login.tailscale.com/f/serve?node=...
+```
+
+그 링크를 브라우저에서 열고 버튼을 누르면 된다. 한 번만 하면 된다.
+(링크는 파이마다 다르게 나오니 터미널에 찍힌 주소를 그대로 쓴다.)
+
 ## 2. 파일 올리고 서비스로 돌리기
 
 ```bash
