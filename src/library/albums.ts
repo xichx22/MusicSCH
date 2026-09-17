@@ -8,8 +8,9 @@
  * 앨범 자체가 잘못 짝지어졌을 수는 있다. 넣기 전에 곡 목록을 보여주고,
  * 넣은 뒤에도 앨범 단위로 되돌릴 수 있게 해둔다.
  *
- * 뽀로로는 웹 검색으로 스포티파이 앨범이 안 잡혔다(애플뮤직·벅스만 나온다).
- * 스포티파이에 곡은 있으니 앨범 링크는 아빠가 직접 복사해 넣어야 한다.
+ * 아티스트 이름을 잘못 짚으면 없는 줄 안다. 뽀로로는 한동안 '없다' 고
+ * 적어뒀었는데, 스포티파이에서는 'Pororo the little penguin' 이라는
+ * 이름으로 앨범이 잔뜩 올라와 있었다.
  *
  * 앨범 이름은 스포티파이에 적힌 그대로 둔다. 한글로 번역해 적었더니
  * 한국어 앨범인 줄 알고 눌렀다가 영어 제목이 나와서 헷갈렸다.
@@ -25,6 +26,23 @@ export interface RecommendedAlbum {
 }
 
 export const RECOMMENDED_ALBUMS: RecommendedAlbum[] = [
+  /*
+   * 뽀롱뽀롱 뽀로로.
+   * 스포티파이 아티스트 이름은 'Pororo the little penguin' 이다.
+   * 앨범 이름은 영어가 많지만 음원은 한국어다.
+   */
+  { characterId: 'c-pororo', id: '1ijw1FFDB0bL33hrqQzXkb', title: 'Pororo Car Songs', note: '2021 · 6곡 · 자동차' },
+  { characterId: 'c-pororo', id: '0a4XHU7gWoVQ4bhOFwTSw3', title: 'Pororo Best Kids Songs (Korean Ver.)', note: '2022 · 9곡 · 한국어 음원' },
+  { characterId: 'c-pororo', id: '6l8Qi5EXL8PmQmAtlbCgSA', title: '뽀로로 시즈널 동요', note: '2022 · 8곡 · 이름도 곡도 한글' },
+  { characterId: 'c-pororo', id: '1eUCvWCjgbP2vWXTwmBVrs', title: 'Pororo Dinosaur Songs', note: '2023 · 9곡 · 공룡' },
+  { characterId: 'c-pororo', id: '70SmX9neLjD56oPZzaXgJP', title: 'Pororo Job Songs', note: '2022 · 8곡 · 직업' },
+  { characterId: 'c-pororo', id: '748jVIRz6criOthqfPVNLG', title: 'Pororo Animal Songs', note: '2022 · 10곡 · 동물' },
+  { characterId: 'c-pororo', id: '3TMBjze71RL3vrotP7ZG7d', title: 'Pororo Shark Songs', note: '2020 · 10곡 · 상어' },
+  { characterId: 'c-pororo', id: '7yDFEu6zWJ19e7dA9Af6ki', title: 'Pororo Baby Songs', note: '2022 · 9곡' },
+  { characterId: 'c-pororo', id: '2DUAcOKzsIsG0gLey73N1x', title: 'Pororo NEW singalong', note: '2025 · 15곡' },
+  { characterId: 'c-pororo', id: '3zkFkz9AlLhghjabvmuKbt', title: 'Pororo Rap Chant', note: '2021 · 28곡' },
+  { characterId: 'c-pororo', id: '3aC2Q8SEfEMi6BqStC9yqk', title: 'Pororo Singalong Lullabies', note: '2026 · 40곡 · 자장가' },
+
   /*
    * 꼬마버스 타요.
    * 스포티파이에서는 앨범 이름이 영어다. '(Korean Version)' 이 붙은 것이

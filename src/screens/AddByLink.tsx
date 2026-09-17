@@ -273,9 +273,6 @@ function Recommended({
         웹에서 찾아둔 앨범이야. 누르면 링크가 채워지고, <strong>가져오기</strong> 를 누르면
         스포티파이에서 진짜 수록곡을 받아온다. 넣기 전에 목록을 보여주니 이상하면 그때 취소하면 돼.
         넣은 뒤에도 앨범별로 되돌릴 수 있다.
-        <br />
-        <strong>뽀로로는 스포티파이 앨범을 못 찾았어</strong> — 애플뮤직·벅스에만 잡혀서,
-        뽀로로 앨범은 아빠가 직접 링크를 복사해 넣어야 해.
       </p>
       {groups.map((cid) => (
         <div key={cid} className="recommend-group">
