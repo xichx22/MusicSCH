@@ -54,6 +54,13 @@ function cors(res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Sync-Token')
   res.setHeader('Access-Control-Max-Age', '86400')
+
+  // 앱은 공개 주소(github.io)에서 열리는데 파이는 테일스케일 사설대역
+  // (100.64.0.0/10)이다. 크롬은 "공개 페이지 → 사설망" 요청을 기본으로 막고,
+  // 서버가 이 헤더로 허락해야만 통과시킨다(Private Network Access).
+  // 이게 없으면 주소창으로 열 때는 되는데 앱에서만 "파이에 못 닿아" 가 난다 —
+  // 주소창 이동은 이 검사를 안 받기 때문이다.
+  res.setHeader('Access-Control-Allow-Private-Network', 'true')
 }
 
 function send(res, code, body) {
@@ -82,6 +89,14 @@ function readBody(req) {
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x')
+
+  // 들어온 요청을 한 줄씩 남긴다. 예전엔 저장에 성공했을 때만 기록해서,
+  // "앱이 파이에 못 닿는다" 고 할 때 요청이 여기까지 왔는지조차 알 수 없었다.
+  // 테일스케일 serve 를 거치면 진짜 기기 주소는 x-forwarded-for 에 담겨 온다.
+  const from = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '?'
+  const origin = req.headers['origin'] ? ` origin=${req.headers['origin']}` : ''
+  const pna = req.headers['access-control-request-private-network'] ? ' [사설망요청]' : ''
+  console.log(`${req.method} ${url.pathname} ← ${from}${origin}${pna}`)
 
   if (req.method === 'OPTIONS') {
     cors(res)
