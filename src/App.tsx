@@ -5,6 +5,7 @@ import { log as logDiag } from './library/diag'
 import { getSource } from './sources'
 import { SpotifyRateLimitError } from './sources/spotify'
 import { usePlayer, type NowPlaying } from './hooks/usePlayer'
+import { useAutoSync } from './useAutoSync'
 import { PickGrid } from './screens/PickGrid'
 import { Playing } from './screens/Playing'
 import { Message } from './screens/Message'
@@ -46,6 +47,9 @@ export default function App() {
       return next
     })
   }, [])
+
+  // 다른 기기와 목록 맞추기. 파이가 꺼져 있으면 조용히 넘어간다.
+  useAutoSync(db, setDb)
 
   const limitReached =
     db.settings.dailyLimitMin > 0 && db.usage.secondsPlayed >= db.settings.dailyLimitMin * 60

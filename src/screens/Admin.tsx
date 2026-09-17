@@ -12,6 +12,7 @@ import { AddByLink } from './AddByLink'
 import { BuildCards } from './BuildCards'
 import { FixCards } from './FixCards'
 import { ExportList } from './ExportList'
+import { Sync } from './Sync'
 
 interface Props {
   db: DB
@@ -174,6 +175,8 @@ export function Admin({ db, setDb, onClose }: Props) {
       <CardArt db={db} setDb={setDb} />
 
       <ExportList db={db} />
+
+      <Sync db={db} setDb={setDb} />
 
       <ComboCheck db={db} setDb={setDb} />
 
